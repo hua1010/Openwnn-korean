@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.text.method.MetaKeyKeyListener;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -50,6 +51,8 @@ import io.rivmt.keyboard.openwnn.event.SoftKeyLongPressEvent;
 
 //TODO: Split up unnecessary procedures to each class
 public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
+
+	private final static String TAG = "OpenWnnKOKR";
 
 	public static final int[][] SHIFT_CONVERT = {
 			{0x60, 0x7e},
@@ -351,6 +354,18 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 				updateMetaKeyStateDisplay();
 			}
 		}
+		//用于遥控器焦点获取
+		switch (key) {
+			case KeyEvent.KEYCODE_DPAD_UP:
+			case KeyEvent.KEYCODE_DPAD_DOWN:
+			case KeyEvent.KEYCODE_DPAD_LEFT:
+			case KeyEvent.KEYCODE_DPAD_RIGHT:
+			case KeyEvent.KEYCODE_DPAD_CENTER:
+				if(mInputViewManager instanceof DefaultSoftKeyboardKOKR) {
+					Log.d(TAG, "processKeyEvent: "+key);
+					((DefaultSoftKeyboardKOKR) mInputViewManager).dispatchKeyEvent(event.getKeyEvent());
+				}
+		}
 	}
 
 	@Subscribe
@@ -521,6 +536,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 	@Subscribe
 	public void onInputKey(InputKeyEvent event) {
 		KeyEvent keyEvent = event.getKeyEvent();
+		Log.d(TAG, "onInputKey: "+keyEvent.getAction());
 		switch(keyEvent.getKeyCode()) {
 		case KeyEvent.KEYCODE_ALT_LEFT:
 		case KeyEvent.KEYCODE_ALT_RIGHT:
@@ -780,7 +796,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 
 	@SuppressLint("NewApi")
 	private boolean processKeyEvent(KeyEvent ev) {
-		if(mInputConnection == null) return false;
+		if(mInputConnection == null || !isInputViewShown()) return false;
 		int key = ev.getKeyCode();
 
 		if (ev.isShiftPressed()) {
@@ -822,7 +838,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 					updateMetaKeyStateDisplay();
 					updateNumKeyboardShiftState();
 				}
-				return true;
+				return false;
 
 			default:
 				mSelectionMode = false;
@@ -830,6 +846,19 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 			}
 		} else {
 			mSelectionMode = false;
+			//用于遥控器焦点获取
+			switch (key) {
+				case KeyEvent.KEYCODE_DPAD_UP:
+				case KeyEvent.KEYCODE_DPAD_DOWN:
+				case KeyEvent.KEYCODE_DPAD_LEFT:
+				case KeyEvent.KEYCODE_DPAD_RIGHT:
+				case KeyEvent.KEYCODE_DPAD_CENTER:
+					if(mInputViewManager instanceof DefaultSoftKeyboardKOKR) {
+						Log.d(TAG, "processKeyEvent: "+ev.getKeyCode());
+						((DefaultSoftKeyboardKOKR) mInputViewManager).dispatchKeyEvent(ev);
+					}
+					return true;
+			}
 		}
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {

@@ -58,7 +58,7 @@ import static io.rivmt.keyboard.openwnn.KOKR.layout.LayoutShinSebul.JAMO_SEBUL_3
 
 public enum EngineMode {
 
-	DIRECT(null, null, null, null, null, null),
+	DIRECT(null, null, null, null, null, ""),
 
 	SEBUL_390		(new Properties(), JAMO_SEBUL_390, null, COMB_SEBULSIK, null, "keyboard_sebul_390"),
 	SEBUL_391		(new Properties(), JAMO_SEBUL_391, null, COMB_SEBULSIK, null, "keyboard_sebul_391"),

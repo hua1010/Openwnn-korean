@@ -24,7 +24,7 @@ Dictionary::Dictionary(int javaHash) {
 
 std::map<int, Dictionary*> * dictionaries = new std::map<int, Dictionary*>();
 
-const int getHashCode(JNIEnv * jenv, jobject obj) {
+int getHashCode(JNIEnv * jenv, jobject obj) {
     jclass cls = jenv->GetObjectClass(obj);
     jmethodID mid = jenv->GetMethodID(cls, "hashCode", "()I");
     if(mid == 0) return 0;
@@ -220,7 +220,7 @@ std::map<std::wstring, int> * searchStartsWith(TrieNode * p, std::wstring prefix
     if(limit > 0 && currentWord.length() > limit) return words;
     if(p->compressed != nullptr) {
         int length = (int) currentWord.length() + (int) p->compressed->length() - 1;
-        if(limit > 0 && length > limit || prefix.length() > length) return words;
+        if((limit > 0 && length > limit) || prefix.length() > length) return words;
         if(prefix.length() > depth) {
             for(int j = 0 ; j < prefix.length() - depth ; j++) {
                 if(p->compressed->substr(1).at(j) != prefix.at(depth + j)) return words;

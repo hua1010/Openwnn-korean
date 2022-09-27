@@ -13,10 +13,14 @@ import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.os.Build;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
+import android.view.InputDevice;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -373,6 +377,25 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 		}
 
 	}
+	class onKeyboardViewKeyListenor implements View.OnKeyListener{
+
+		@Override
+		public boolean onKey(View view, int i, KeyEvent keyEvent) {
+			if(keyEvent.getAction() != KeyEvent.ACTION_UP)
+				return false;
+			switch (keyEvent.getKeyCode()){
+				case KeyEvent.KEYCODE_DPAD_LEFT:
+				case KeyEvent.KEYCODE_DPAD_RIGHT:
+				case KeyEvent.KEYCODE_DPAD_DOWN:
+				case KeyEvent.KEYCODE_DPAD_UP:
+				case KeyEvent.KEYCODE_DPAD_CENTER:
+					Log.d("hangup", "onKey: "+ keyEvent.getKeyCode());
+					return true;
+			}
+			return false;
+		}
+	}
+
 
 	class OnKeyboardViewTouchListener implements View.OnTouchListener {
 		@Override
@@ -717,10 +740,13 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 			if(mShowNumKeyboardViewPortrait && mDisplayMode == PORTRAIT) mMainView.addView(mNumKeyboardView);
 			if(mShowNumKeyboardViewLandscape && mDisplayMode == LANDSCAPE) mMainView.addView(mNumKeyboardView);
 		} else if (mKeyboardView != null) {
+			mKeyboardView.setFocusable(true);
+			mKeyboardView.setFocusableInTouchMode(true);
 			mMainView.addView(mKeyboardView);
 		}
 		mKeyboardView.setOnTouchListener(new OnKeyboardViewTouchListener());
 		mNumKeyboardView.setOnTouchListener(new OnKeyboardViewTouchListener());
+		mKeyboardView.setOnKeyListener(new onKeyboardViewKeyListenor());
 		TextView langView = mSubView.findViewById(R.id.lang);
 		langView.setOnTouchListener((v, event) -> {
 			if(event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -852,6 +878,21 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 		if(mTimeoutHandler == null && mTimeoutDelay > 0) {
 			mTimeoutHandler = new Handler();
 			mTimeoutHandler.postDelayed(new TimeOutHandler(), mTimeoutDelay);
+		}
+	}
+
+	public void dispatchKeyEvent(KeyEvent event){
+		if(mKeyboardView != null) {
+			//mKeyboardView.dispatchKeyShortcutEvent(event);
+			//mKeyboardView.dispatchKeyEvent(event);
+			if(mKeyboardView instanceof  DefaultSoftKeyboardViewKOKR) {
+				DefaultSoftKeyboardViewKOKR keyboardView = ((DefaultSoftKeyboardViewKOKR) mKeyboardView);
+				keyboardView.moveToNextKey(event);
+				if(event.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER && event.getAction() == KeyEvent.ACTION_UP){
+					onKey(keyboardView.getCurrentKey());
+				}
+			}
+			//mMainView.dispatchKeyEvent(event);
 		}
 	}
 

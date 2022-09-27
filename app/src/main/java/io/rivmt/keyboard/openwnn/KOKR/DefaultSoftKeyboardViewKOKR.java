@@ -8,15 +8,23 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.inputmethodservice.Keyboard;
+import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
 
 import java.lang.reflect.Field;
+import java.util.List;
+
+import io.rivmt.keyboard.openwnn.R;
 
 public class DefaultSoftKeyboardViewKOKR extends KeyboardView {
 
 	private Context context;
 	private SoftKeyboardDisplay keyboardDisplay;
+	private int focusIndex = 0;
 
 	public DefaultSoftKeyboardViewKOKR(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -41,23 +49,31 @@ public class DefaultSoftKeyboardViewKOKR extends KeyboardView {
 		}
 
 		for(Keyboard.Key key : keyboard.getKeys()) {
+			boolean focus = keyboard.getKeys().indexOf(key) == focusIndex;
 			int keyCode = key.codes[0];
 			SoftKeyDisplay keyDisplay = keyboardDisplay.get(keyCode);
 			if(keyDisplay != null && keyDisplay.getKeyBackground() != 0) {
-				onDrawBackground(keyDisplay.getKeyBackground(), keyDisplay.getFixWidth(), canvas, key);
+				onDrawBackground(keyDisplay.getKeyBackground(), keyDisplay.getFixWidth(), canvas, key,focus);
 				onDrawForeground(keyDisplay.getKeyIcon(), keyDisplay.getColor(), canvas, key);
 			} else if(keyboardDisplay.getKeyBackground() != 0) {
-				onDrawBackground(keyboardDisplay.getKeyBackground(), false, canvas, key);
+				onDrawBackground(keyboardDisplay.getKeyBackground(), false, canvas, key, focus);
+				onDrawForeground(0, keyboardDisplay.getColor(), canvas, key);
+			} else {	//keyDisplay == 0 && keyboardDisplay.getKeyBackground() == 0
+				onDrawBackground(R.drawable.keybg_white_def, false, canvas, key, focus);
 				onDrawForeground(0, keyboardDisplay.getColor(), canvas, key);
 			}
 		}
-
 	}
 
-	private void onDrawBackground(int drawableId, boolean fixWidth, Canvas canvas, Keyboard.Key key) {
-		Drawable npd = context.getResources().getDrawable(drawableId);
+	private void onDrawBackground(int drawableId, boolean fixWidth, Canvas canvas, Keyboard.Key key, boolean focus) {
+		Drawable npd = null;
+		if(focus)
+			npd = context.getResources().getDrawable(R.drawable.keybg_focus_white_def);
+		else
+			npd = context.getResources().getDrawable(drawableId);
 		int[] drawableState = key.getCurrentDrawableState();
 		if(key.codes[0] != 0) npd.setState(drawableState);
+
 		if(fixWidth) {
 			int x = key.x + (key.width - key.height) / 2;
 			npd.setBounds(x, key.y, x + key.height, key.y + key.height);
@@ -72,7 +88,7 @@ public class DefaultSoftKeyboardViewKOKR extends KeyboardView {
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setAntiAlias(true);
 		if(textColor != 0) paint.setColor(textColor);
-		else paint.setColor(Color.WHITE);
+		else paint.setColor(Color.BLACK);
 
 		if(drawableId != 0) {
 			Drawable icon = context.getResources().getDrawable(drawableId);
@@ -117,6 +133,88 @@ public class DefaultSoftKeyboardViewKOKR extends KeyboardView {
 		}
 
 	}
+
+	public void moveToNextKey(KeyEvent event) {
+		Keyboard keyboard = this.getKeyboard();
+		List<Keyboard.Key> keys = keyboard.getKeys();
+		if(0 > focusIndex || keys.size() < focusIndex) {
+			focusIndex = 0;
+			invalidate();
+			return;
+		}
+		Key key = keys.get(focusIndex);
+		switch (event.getKeyCode()) {
+			case KeyEvent.KEYCODE_DPAD_UP:{
+				if(event.getAction() == KeyEvent.ACTION_UP) break;
+				int indices = 0 , target, min = 0;
+				if(key.y - key.height >= 0)
+					target = (key.y - key.height) * 100 + key.x;
+				else
+					target = (getHeight() - key.height) * 100 + key.x;
+				for (int index = 0;index < keys.size(); index++) {
+					Key tmp = keys.get(index);
+					if(index == 0) min = Math.abs(tmp.y * 100 + tmp.x - target);
+					else if (min > Math.abs(tmp.y * 100 + tmp.x - target)) {
+						min = Math.abs(tmp.y * 100 + tmp.x - target);
+						indices = index;
+					}
+				}
+				focusIndex = indices;
+				invalidate();
+				break;
+			}
+			case KeyEvent.KEYCODE_DPAD_DOWN:{
+				if(event.getAction() == KeyEvent.ACTION_UP) break;
+				int indices = 0 , target, min = 0;
+				if(key.y + key.height < keyboard.getHeight())
+					target = (key.y + key.height) * 100 + key.x;
+				else
+					target = key.x;
+				for (int index = 0;index < keys.size(); index++) {
+					Key tmp = keys.get(index);
+					if(index == 0) min = Math.abs(tmp.y * 100 + tmp.x - target);
+					else if (min > Math.abs(tmp.y * 100 + tmp.x - target)) {
+						min = Math.abs(tmp.y * 100 + tmp.x - target);
+						indices = index;
+					}
+				}
+				focusIndex = indices;
+				invalidate();
+				break;
+			}
+			case KeyEvent.KEYCODE_DPAD_LEFT:{
+				if(event.getAction() == KeyEvent.ACTION_UP) break;
+				focusIndex -= 1;
+				if(focusIndex < 0) focusIndex = keys.size() -1;
+				invalidate();
+				break;
+			}
+			case KeyEvent.KEYCODE_DPAD_RIGHT:{
+				if(event.getAction() == KeyEvent.ACTION_UP) break;
+				focusIndex += 1;
+				if(focusIndex >= keys.size()) focusIndex = 0;
+				invalidate();
+				break;
+			}
+			case KeyEvent.KEYCODE_DPAD_CENTER:
+				if(event.getAction() == KeyEvent.ACTION_DOWN) {
+					key.onPressed();
+					invalidateAllKeys();
+				}else
+					key.onReleased(false);
+				break;
+			default:
+				break;
+		}
+	}
+
+	public int getCurrentKey(){
+		Keyboard keyboard = this.getKeyboard();
+		List<Keyboard.Key> keys = keyboard.getKeys();
+		Key key = keys.get(focusIndex);
+		return key.codes[0];
+	}
+
 
 	public SoftKeyboardDisplay getKeyboardDisplay() {
 		return keyboardDisplay;
