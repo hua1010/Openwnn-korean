@@ -966,6 +966,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 			switch(editorInfo.imeOptions & EditorInfo.IME_MASK_ACTION) {
 			case EditorInfo.IME_ACTION_SEARCH:
 			case EditorInfo.IME_ACTION_GO:
+			case EditorInfo.IME_ACTION_NEXT:
 				sendDefaultEditorAction(true);
 				return true;
 

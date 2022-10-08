@@ -19,5 +19,11 @@
 
 <input-method xmlns:android="http://schemas.android.com/apk/res/android"
               android:settingsActivity="me.blog.hgl1002.openwnn.OpenWnnControlPanelKOKR"
-			  android:supportsSwitchingToNextInputMethod="true"
-/>
+			  android:supportsSwitchingToNextInputMethod="true">
+			  <subtype 
+			  	android:label="@string/ime_name" 
+			  	android:icon="@mipmap/ic_launcher" 
+			  	android:imeSubtypeLocale="ko" 
+			  	android:imeSubtypeMode="keyboard"
+			  	android:imeSubtypeExtraValue="AsciiCapable,EmojiCapable"/>
+</input-method>
