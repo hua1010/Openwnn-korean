@@ -472,7 +472,7 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 
 		Keyboard[][][] keyList;
 
-		mUse12Key = pref.getBoolean("keyboard_hangul_use_12key", false);
+		mUse12Key = pref.getBoolean("keyboard_hangul_use_12key", true);
 		mUseAlphabetQwerty = pref.getBoolean("keyboard_alphabet_use_qwerty", true);
 
 		boolean use12Key = mUse12Key, useAlphabetQwerty = mUseAlphabetQwerty;
@@ -492,7 +492,7 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 			keyList = mKeyboard[LANG_KO][mDisplayMode][KEYBOARD_12KEY];
 
 			mCurrentKeyboardType = KEYBOARD_12KEY;
-			String defaultLayout = pref.getString("keyboard_hangul_12key_layout", "keyboard_12key_sebul_munhwa");
+			String defaultLayout = pref.getString("keyboard_hangul_12key_layout", "keyboard_dubul_danmoeum_google");
 
 			switch(defaultLayout) {
 			case "keyboard_12key_dubul_cheonjiin":
@@ -536,7 +536,7 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 
 			mCurrentKeyboardType = KEYBOARD_QWERTY;
 			useAlphabetQwerty = true;
-			String defaultLayout = "keyboard_sebul_391";
+			String defaultLayout = "keyboard_dubul_standard";
 			if(!mHardKeyboardHidden) {
 				if(pref.getBoolean("keyboard_dev_use_hangul_hard", false)) {
 					defaultLayout = pref.getString("keyboard_dev_hard_layout", defaultLayout);
@@ -552,7 +552,7 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 			}
 			mCurrentKeyboards[LANG_KO] = EngineMode.get(defaultLayout);
 
-			String softLayout = "l1.2";
+			String softLayout = "l1.0";
 			if(mDisplayMode == PORTRAIT) softLayout = pref.getString("keyboard_hangul_soft_layout_portrait", softLayout);
 			else softLayout = pref.getString("keyboard_hangul_soft_layout_landscape", softLayout);
 			loadSoftLayout(keyList, softLayout);
@@ -562,7 +562,8 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 		String altSoftLayout = "l1.0";
 		if(mDisplayMode == PORTRAIT) altSoftLayout = pref.getString("keyboard_symbols_soft_layout_portrait", altSoftLayout);
 		else altSoftLayout = pref.getString("keyboard_symbols_soft_layout_landscape", altSoftLayout);
-		String altLayout = pref.getString("keyboard_symbols_layout", "keyboard_symbols_a");
+		String altLayout = pref.getString("keyboard_symbols_layout", "keyboard_symbols_b");
+
 		mAltKeyMode = EngineMode.get(altLayout);
 		loadSoftLayout(keyList, KEYMODE_ALT_SYMBOLS, altSoftLayout);
 
@@ -1021,13 +1022,13 @@ public class DefaultSoftKeyboardKOKR extends DefaultSoftKeyboard {
 			EventBus.getDefault().post(new InputViewChangeEvent());
 		}
 
-		boolean use12Key = pref.getBoolean("keyboard_hangul_use_12key", false);
+		boolean use12Key = pref.getBoolean("keyboard_hangul_use_12key", true);
 		boolean useAlphabetQwerty = pref.getBoolean("keyboard_alphabet_use_qwerty", true);
 		if(mUse12Key != use12Key || useAlphabetQwerty != mUseAlphabetQwerty) {
 			EventBus.getDefault().post(new InputViewChangeEvent());
 		}
 		mLongPressTimeout = pref.getInt("keyboard_long_press_timeout", 500);
-		mUseFlick = pref.getBoolean("keyboard_use_flick", true);
+		mUseFlick = pref.getBoolean("keyboard_use_flick", false);
 		mFlickSensitivity = pref.getInt("keyboard_flick_sensitivity", DEFAULT_FLICK_SENSITIVITY);
 		mTimeoutDelay = pref.getInt("keyboard_timeout_delay", mTimeoutDelay);
 		mSpaceSlideSensitivity = mFlickSensitivity;

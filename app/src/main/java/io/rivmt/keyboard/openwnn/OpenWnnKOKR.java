@@ -132,7 +132,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 	boolean mDirectInputMode;
 	boolean mEnableTimeout;
 
-	boolean mMoachigi;
+	boolean mMoachigi = true;
 	boolean mHardwareMoachigi;
 	boolean mFullMoachigi = true;
 	int mMoachigiDelay;
@@ -202,7 +202,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 	public View onCreateInputView() {
 		int hiddenState = getResources().getConfiguration().hardKeyboardHidden;
 		boolean hidden = (hiddenState == Configuration.HARDKEYBOARDHIDDEN_YES);
-		((DefaultSoftKeyboardKOKR) mInputViewManager).setHardKeyboardHidden(hidden);
+		((DefaultSoftKeyboardKOKR) mInputViewManager).setHardKeyboardHidden(true);
 
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -236,7 +236,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 
 		boolean hardKeyboardHidden = ((DefaultSoftKeyboard) mInputViewManager).mHardKeyboardHidden;
 
-		String altLayout = pref.getString("keyboard_symbols_layout", "keyboard_symbols_a");
+		String altLayout = pref.getString("keyboard_symbols_layout", "keyboard_symbols_b");
 		mAltLayout = EngineMode.get(altLayout).layout;
 
 		setCandidatesViewShown(pref.getBoolean("conversion_show_candidates", false));
@@ -301,7 +301,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 				/* Hardware keyboard */
 				int hiddenState = newConfig.hardKeyboardHidden;
 				boolean hidden = (hiddenState == Configuration.HARDKEYBOARDHIDDEN_YES);
-				((DefaultSoftKeyboardKOKR) mInputViewManager).setHardKeyboardHidden(hidden);
+				((DefaultSoftKeyboardKOKR) mInputViewManager).setHardKeyboardHidden(true);
 			}
 		} catch (Exception ignored) {
 		}
@@ -779,7 +779,7 @@ public class OpenWnnKOKR extends OpenWnn implements HangulEngineListener {
 			break;
 
 		case LANGKEY_TOGGLE_12KEY_MODE:
-			boolean use12key = pref.getBoolean("keyboard_hangul_use_12key", false);
+			boolean use12key = pref.getBoolean("keyboard_hangul_use_12key", true);
 			editor.putBoolean("keyboard_hangul_use_12key", !use12key);
 			editor.commit();
 			EventBus.getDefault().post(new InputViewChangeEvent());
