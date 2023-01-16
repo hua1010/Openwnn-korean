@@ -26,6 +26,18 @@
                 android:name="android.view.im"
                 android:resource="@xml/method_ko" />
         </service>
+        <service android:name=".OpenWnnJAJP"
+            android:label="@string/ime_name_jap"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method_ja" />
+        </service>
 
         <activity
             android:name="io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR"

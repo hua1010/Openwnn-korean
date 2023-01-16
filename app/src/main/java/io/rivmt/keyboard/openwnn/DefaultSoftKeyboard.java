@@ -32,6 +32,8 @@ import android.content.Context;
 
 import android.util.Log;
 
+import io.rivmt.keyboard.openwnn.KOKR.DefaultSoftKeyboardViewKOKR;
+
 /**
  * The default software keyboard class.
  *
@@ -531,9 +533,9 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
         createKeyboards(parent);
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(parent);
-        String skin = pref.getString("keyboard_skin",
-                                     mWnn.getResources().getString(R.string.keyboard_skin_id_default));
-        int id = parent.getResources().getIdentifier(skin, "layout", "me.blog.hgl1002.openwnn");
+        String skin = pref.getString("keyboard_skin", mWnn.getResources().getString(R.string.keyboard_skin_id_default));
+        int id = parent.getResources().getIdentifier("keyboard_" + skin, "layout", parent.getPackageName());
+        if(id == 0) id = R.layout.keyboard_def_white;
 
         mKeyboardView = (KeyboardView) mWnn.getLayoutInflater().inflate(id, null);
         mKeyboardView.setOnKeyboardActionListener(this);

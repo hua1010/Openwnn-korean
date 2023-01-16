@@ -841,7 +841,7 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
     private void createKeyboardsLandscape(OpenWnn parent) {
         Keyboard[][] keyList;
         /* qwerty shift_off (landscape) */
-/*        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_OFF];
+        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_OFF];
         keyList[KEYMODE_JA_FULL_HIRAGANA][0] = new Keyboard(parent, R.xml.keyboard_qwerty_landscape);
         keyList[KEYMODE_JA_FULL_ALPHABET][0] = new Keyboard(parent, R.xml.keyboard_qwerty_full_alphabet_landscape);
         keyList[KEYMODE_JA_FULL_NUMBER][0]   = new Keyboard(parent, R.xml.keyboard_qwerty_full_symbols_landscape);
@@ -850,9 +850,9 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
         keyList[KEYMODE_JA_HALF_NUMBER][0]   = new Keyboard(parent, R.xml.keyboard_qwerty_half_symbols_landscape);
         keyList[KEYMODE_JA_HALF_KATAKANA][0] = new Keyboard(parent, R.xml.keyboard_qwerty_half_katakana_landscape);
         keyList[KEYMODE_JA_HALF_PHONE][0]    = new Keyboard(parent, R.xml.keyboard_12key_phone_landscape);
-*/
+
         /* qwerty shift_on (landscape) */
-/*        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_ON];
+        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_ON];
         keyList[KEYMODE_JA_FULL_HIRAGANA][0] =
             mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_OFF][KEYMODE_JA_FULL_HIRAGANA][0];
         keyList[KEYMODE_JA_FULL_ALPHABET][0] = new Keyboard(parent, R.xml.keyboard_qwerty_full_alphabet_shift_landscape);
@@ -866,9 +866,9 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
             mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_OFF][KEYMODE_JA_HALF_KATAKANA][0];
         keyList[KEYMODE_JA_HALF_PHONE][0] =
             mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_QWERTY][KEYBOARD_SHIFT_OFF][KEYMODE_JA_HALF_PHONE][0];
-*/
+
         /* 12-keys shift_off (landscape) */
-/*        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_OFF];
+        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_OFF];
         keyList[KEYMODE_JA_FULL_HIRAGANA][0] = new Keyboard(parent, R.xml.keyboard_12keyjp_landscape);
         keyList[KEYMODE_JA_FULL_HIRAGANA][1] = new Keyboard(parent, R.xml.keyboard_12keyjp_input_landscape);
         keyList[KEYMODE_JA_FULL_ALPHABET][0] = new Keyboard(parent, R.xml.keyboard_12key_alphabet_landscape);
@@ -882,9 +882,9 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
         keyList[KEYMODE_JA_HALF_KATAKANA][0] = new Keyboard(parent, R.xml.keyboard_12key_katakana_landscape);
         keyList[KEYMODE_JA_HALF_KATAKANA][1] = new Keyboard(parent, R.xml.keyboard_12key_katakana_input_landscape);
         keyList[KEYMODE_JA_HALF_PHONE][0]    = new Keyboard(parent, R.xml.keyboard_12key_phone_landscape);
-*/
+
         /* 12-keys shift_on (landscape) */
-/*        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_ON];
+        keyList = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_ON];
         keyList[KEYMODE_JA_FULL_HIRAGANA]
             = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_OFF][KEYMODE_JA_FULL_HIRAGANA];
         keyList[KEYMODE_JA_FULL_ALPHABET]
@@ -901,7 +901,6 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
             = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_OFF][KEYMODE_JA_HALF_KATAKANA];
         keyList[KEYMODE_JA_HALF_PHONE]
             = mKeyboard[LANG_JA][LANDSCAPE][KEYBOARD_12KEY][KEYBOARD_SHIFT_OFF][KEYMODE_JA_HALF_PHONE];
-*/
     }
 
     /**

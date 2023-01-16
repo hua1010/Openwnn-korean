@@ -18,6 +18,7 @@
 
   <string name="app_name">OpenWnn Korean Keyboard</string>
   <string name="ime_name">OpenWnn Korean</string>
+  <string name="ime_name_jap">OpenWnn Japanese</string>
 
   <!-- Preferences -->
     <string name="preference_ime_setting_app">Keyboard Settings</string>
