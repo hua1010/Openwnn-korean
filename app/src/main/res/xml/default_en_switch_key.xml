@@ -14,16 +14,15 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<!-- The attributes in this XML file provide configuration information -->
-<!-- for the Search Manager. -->
-
-<input-method xmlns:android="http://schemas.android.com/apk/res/android"
-              android:settingsActivity="me.blog.hgl1002.openwnn.OpenWnnControlPanelKOKR"
-			  android:supportsSwitchingToNextInputMethod="true">
-			  <subtype 
-			  	android:label="@string/ime_name" 
-			  	android:icon="@mipmap/ic_launcher" 
-			  	android:imeSubtypeLocale="en_US" 
-			  	android:imeSubtypeMode="keyboard"
-			  	android:imeSubtypeExtraValue="AsciiCapable,EmojiCapable"/>
-</input-method>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+	  android:keyWidth="15%p"
+	  android:horizontalGap="0px"
+	  android:verticalGap="0px"
+	  android:keyHeight="50px" >
+  <Row>
+    <Key android:codes="-113" android:keyLabel="aA"
+	 android:keyEdgeFlags="left"/>
+    <Key android:codes="-112" android:keyLabel="12"
+	 android:keyEdgeFlags="right"/>
+  </Row>
+</Keyboard>

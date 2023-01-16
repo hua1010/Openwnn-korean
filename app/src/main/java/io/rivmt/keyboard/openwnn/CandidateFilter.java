@@ -16,6 +16,8 @@
 
 package io.rivmt.keyboard.openwnn;
 
+import java.util.regex.Pattern;
+
 /**
  * The filter class for candidates.
  * This class is used for filtering candidates by {link WnnEngine}.
@@ -26,11 +28,25 @@ package io.rivmt.keyboard.openwnn;
 public class CandidateFilter {
     /** Filtering pattern (No filter) */
     public static final int FILTER_NONE = 0x0;
+    /** Filtering pattern (Emoji filter) */
+    public static final int FILTER_EMOJI = 0x1;
     /** Filtering pattern (Non ASCII) */
     public static final int FILTER_NON_ASCII = 0x2;
 
+    /** Regular expression pattern for emoji */
+    private static final Pattern PATTERN_EMOJI = Pattern.compile("[\uDBB8\uDBB9\uDBBA\uDBBB]");
+
     /** Current filter type */
     public int filter = 0;
+
+    /**
+     * Set specified filter type.
+     *
+     * @param filter	The filter type
+     */
+    public void setFilter(int filter) {
+        this.filter = filter;
+    }
 
     /**
      * Checking whether a specified word is filtered.
