@@ -27,6 +27,7 @@ import io.rivmt.keyboard.openwnn.KOKR.HangulEngine;
 import io.rivmt.keyboard.openwnn.StrSegmentClause;
 import io.rivmt.keyboard.openwnn.event.InputJAJPEvent;
 import io.rivmt.keyboard.openwnn.event.OpenWnnEvent;
+import io.rivmt.keyboard.openwnn.event.SelectCandidateEvent;
 
 import android.content.SharedPreferences;
 import android.content.Context;
@@ -47,6 +48,9 @@ import android.view.inputmethod.EditorInfo;
 import android.view.View;
 import android.view.KeyCharacterMap;
 import android.text.method.MetaKeyKeyListener;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -403,12 +407,18 @@ public class OpenWnnJAJP extends OpenWnn {
     /** @see io.rivmt.keyboard.openwnn.OpenWnn#onCreate */
     @Override public void onCreate() {
         super.onCreate();
-
+        EventBus.getDefault().register(this);
         String delimiter = Pattern.quote(getResources().getString(R.string.en_word_separators));
         mEnglishAutoCommitDelimiter = Pattern.compile(".*[" + delimiter + "]$");
         if (mConverterSymbolEngineBack == null) {
             mConverterSymbolEngineBack = new SymbolList(this, SymbolList.LANG_JA);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     /** @see io.rivmt.keyboard.openwnn.OpenWnn#onCreateInputView */
@@ -526,88 +536,89 @@ public class OpenWnnJAJP extends OpenWnn {
     }
 
     /** @see io.rivmt.keyboard.openwnn.OpenWnn#onEvent */
-    @Override synchronized public boolean onEvent(OpenWnnEvent event) {
+    @Override public boolean onEvent(OpenWnnEvent event) {
         if(!(event instanceof InputJAJPEvent))
             return false;
+
         InputJAJPEvent ev = (InputJAJPEvent)event;
         EngineState state;
 
         /* handling events which are valid when InputConnection is not active. */
         switch (ev.code) {
-        
-        case InputJAJPEvent.KEYUP:
-            onKeyUpEvent(ev.keyEvent);
-            return true;
-            
-        case InputJAJPEvent.INITIALIZE_LEARNING_DICTIONARY:
-            mConverterEN.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
-            mConverterJAJP.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
-            return true;
 
-        case InputJAJPEvent.INITIALIZE_USER_DICTIONARY:
-            return mConverterJAJP.initializeDictionary( WnnEngine.DICTIONARY_TYPE_USER );
+            case InputJAJPEvent.KEYUP:
+                onKeyUpEvent(ev.keyEvent);
+                return true;
 
-        case InputJAJPEvent.LIST_WORDS_IN_USER_DICTIONARY:
-            mUserDictionaryWords = mConverterJAJP.getUserDictionaryWords( );
-            return true;
+            case InputJAJPEvent.INITIALIZE_LEARNING_DICTIONARY:
+                mConverterEN.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
+                mConverterJAJP.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
+                return true;
 
-        case InputJAJPEvent.GET_WORD:
-            if (mUserDictionaryWords != null) {
-                ev.word = mUserDictionaryWords[0];
-                for (int i = 0 ; i < mUserDictionaryWords.length - 1 ; i++) {
-                    mUserDictionaryWords[i] = mUserDictionaryWords[i + 1];
+            case InputJAJPEvent.INITIALIZE_USER_DICTIONARY:
+                return mConverterJAJP.initializeDictionary( WnnEngine.DICTIONARY_TYPE_USER );
+
+            case InputJAJPEvent.LIST_WORDS_IN_USER_DICTIONARY:
+                mUserDictionaryWords = mConverterJAJP.getUserDictionaryWords( );
+                return true;
+
+            case InputJAJPEvent.GET_WORD:
+                if (mUserDictionaryWords != null) {
+                    ev.word = mUserDictionaryWords[0];
+                    for (int i = 0 ; i < mUserDictionaryWords.length - 1 ; i++) {
+                        mUserDictionaryWords[i] = mUserDictionaryWords[i + 1];
+                    }
+                    mUserDictionaryWords[mUserDictionaryWords.length - 1] = null;
+                    if (mUserDictionaryWords[0] == null) {
+                        mUserDictionaryWords = null;
+                    }
+                    return true;
                 }
-                mUserDictionaryWords[mUserDictionaryWords.length - 1] = null;
-                if (mUserDictionaryWords[0] == null) {
-                    mUserDictionaryWords = null;
+                break;
+
+            case InputJAJPEvent.ADD_WORD:
+                mConverterJAJP.addWord(ev.word);
+                return true;
+
+            case InputJAJPEvent.DELETE_WORD:
+                mConverterJAJP.deleteWord(ev.word);
+                return true;
+
+            case InputJAJPEvent.CHANGE_MODE:
+                changeEngineMode(ev.mode);
+                if (!(ev.mode == ENGINE_MODE_SYMBOL || ev.mode == ENGINE_MODE_EISU_KANA)) {
+                    initializeScreen();
+                }
+
+                if (ev.mode != ENGINE_MODE_SYMBOL) {
+                    state = new EngineState();
+                    state.temporaryMode = EngineState.TEMPORARY_DICTIONARY_MODE_NONE;
+                    updateEngineState(state);
                 }
                 return true;
-            }
-            break;
 
-        case InputJAJPEvent.ADD_WORD:
-            mConverterJAJP.addWord(ev.word);
-            return true;
+            case InputJAJPEvent.UPDATE_CANDIDATE:
+                if (mEngineState.isRenbun()) {
+                    mComposingText.setCursor(ComposingText.LAYER1,
+                            mComposingText.toString(ComposingText.LAYER1).length());
+                    mExactMatchMode = false;
+                    updateViewStatusForPrediction(true, true);
+                } else {
+                    updateViewStatus(mTargetLayer, true, true);
+                }
+                return true;
 
-        case InputJAJPEvent.DELETE_WORD:
-            mConverterJAJP.deleteWord(ev.word);
-            return true;
+            case InputJAJPEvent.CHANGE_INPUT_VIEW:
+                setInputView(onCreateInputView());
+                return true;
 
-        case InputJAJPEvent.CHANGE_MODE:
-            changeEngineMode(ev.mode);
-            if (!(ev.mode == ENGINE_MODE_SYMBOL || ev.mode == ENGINE_MODE_EISU_KANA)) {
-            	initializeScreen();
-            }
-            
-            if (ev.mode != ENGINE_MODE_SYMBOL) {
-                state = new EngineState();
-                state.temporaryMode = EngineState.TEMPORARY_DICTIONARY_MODE_NONE;
-                updateEngineState(state);
-            }
-            return true;
-
-        case InputJAJPEvent.UPDATE_CANDIDATE:
-            if (mEngineState.isRenbun()) {
-                mComposingText.setCursor(ComposingText.LAYER1,
-                                         mComposingText.toString(ComposingText.LAYER1).length());
-                mExactMatchMode = false;
-                updateViewStatusForPrediction(true, true);
-            } else {
-                updateViewStatus(mTargetLayer, true, true);
-            }
-            return true;
-
-        case InputJAJPEvent.CHANGE_INPUT_VIEW:
-        	setInputView(onCreateInputView());
-            return true;
-
-        case InputJAJPEvent.CANDIDATE_VIEW_TOUCH:
-            boolean ret;
+            case InputJAJPEvent.CANDIDATE_VIEW_TOUCH:
+                boolean ret;
                 ret = ((TextCandidatesViewManager)mCandidatesViewManager).onTouchSync();
-            return ret;
+                return ret;
 
-        default:
-            break;
+            default:
+                break;
         }
 
         KeyEvent keyEvent = ev.keyEvent;
@@ -620,17 +631,17 @@ public class OpenWnnJAJP extends OpenWnn {
             if (ev.code == InputJAJPEvent.INPUT_SOFT_KEY && mInputConnection != null) {
                 mInputConnection.sendKeyEvent(keyEvent);
                 mInputConnection.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP,
-                                                           keyEvent.getKeyCode()));
+                        keyEvent.getKeyCode()));
             }
 
             /* return if InputConnection is not active */
             return false;
         }
-        
+
         /* notice a break the sequence of input to the converter */
         View candidateView = mCandidatesViewManager.getCurrentView();
         if ((candidateView != null) && !candidateView.isShown()
-            && (mComposingText.size(0) == 0)) {
+                && (mComposingText.size(0) == 0)) {
             if (isEnableL2Converter()) {
                 disableAutoDeleteSpace(ev);
                 mConverter.breakSequence();
@@ -639,15 +650,15 @@ public class OpenWnnJAJP extends OpenWnn {
 
         /* change back the dictionary if necessary */
         if (!((ev.code == InputJAJPEvent.SELECT_CANDIDATE)
-        		|| (ev.code == InputJAJPEvent.LIST_CANDIDATES_NORMAL)
-        		|| (ev.code == InputJAJPEvent.LIST_CANDIDATES_FULL)
-        		|| ((keyEvent != null)
-        				&& ((keyCode == KeyEvent.KEYCODE_ALT_LEFT)
-        						||(keyCode == KeyEvent.KEYCODE_ALT_RIGHT)
-        						||(keyEvent.isAltPressed() && (keyCode == KeyEvent.KEYCODE_SPACE)))))) {
-        	state = new EngineState();
-        	state.temporaryMode = EngineState.TEMPORARY_DICTIONARY_MODE_NONE;
-        	updateEngineState(state);
+                || (ev.code == InputJAJPEvent.LIST_CANDIDATES_NORMAL)
+                || (ev.code == InputJAJPEvent.LIST_CANDIDATES_FULL)
+                || ((keyEvent != null)
+                && ((keyCode == KeyEvent.KEYCODE_ALT_LEFT)
+                ||(keyCode == KeyEvent.KEYCODE_ALT_RIGHT)
+                ||(keyEvent.isAltPressed() && (keyCode == KeyEvent.KEYCODE_SPACE)))))) {
+            state = new EngineState();
+            state.temporaryMode = EngineState.TEMPORARY_DICTIONARY_MODE_NONE;
+            updateEngineState(state);
         }
 
         if (ev.code == InputJAJPEvent.LIST_CANDIDATES_FULL) {
@@ -662,114 +673,121 @@ public class OpenWnnJAJP extends OpenWnn {
 
         boolean ret = false;
         switch (ev.code) {
-        case InputJAJPEvent.INPUT_CHAR:
-            if ((mPreConverter == null) && !isEnableL2Converter()) {
-                /* direct input (= full-width alphabet/number input) */
-                commitText(false);
-                commitText(new String(ev.chars));
-                mCandidatesViewManager.clearCandidates();
-            } else if (!isEnableL2Converter()) {
-                processSoftKeyboardCodeWithoutConversion(ev.chars);
-            } else {
-                processSoftKeyboardCode(ev.chars);
-            }
-            ret = true;
-            break;
+            case InputJAJPEvent.INPUT_CHAR:
+                if ((mPreConverter == null) && !isEnableL2Converter()) {
+                    /* direct input (= full-width alphabet/number input) */
+                    commitText(false);
+                    commitText(new String(ev.chars));
+                    mCandidatesViewManager.clearCandidates();
+                } else if (!isEnableL2Converter()) {
+                    processSoftKeyboardCodeWithoutConversion(ev.chars);
+                } else {
+                    processSoftKeyboardCode(ev.chars);
+                }
+                ret = true;
+                break;
 
-        case InputJAJPEvent.TOGGLE_CHAR:
-            processSoftKeyboardToggleChar(ev.toggleTable);
-            ret = true;
-            break;
+            case InputJAJPEvent.TOGGLE_CHAR:
+                processSoftKeyboardToggleChar(ev.toggleTable);
+                ret = true;
+                break;
 
-        case InputJAJPEvent.TOGGLE_REVERSE_CHAR:
-            if (((mStatus & ~STATUS_CANDIDATE_FULL) == STATUS_INPUT)
-                && !(mEngineState.isConvertState())) {
+            case InputJAJPEvent.TOGGLE_REVERSE_CHAR:
+                if (((mStatus & ~STATUS_CANDIDATE_FULL) == STATUS_INPUT)
+                        && !(mEngineState.isConvertState())) {
 
+                    int cursor = mComposingText.getCursor(ComposingText.LAYER1);
+                    if (cursor > 0) {
+                        String prevChar = mComposingText.getStrSegment(ComposingText.LAYER1, cursor - 1).string;
+                        String c = searchToggleCharacter(prevChar, ev.toggleTable, true);
+                        if (c != null) {
+                            mComposingText.delete(ComposingText.LAYER1, false);
+                            appendStrSegment(new StrSegment(c));
+                            updateViewStatusForPrediction(true, true);
+                            ret = true;
+                            break;
+                        }
+                    }
+                }
+                break;
+
+            case InputJAJPEvent.REPLACE_CHAR:
                 int cursor = mComposingText.getCursor(ComposingText.LAYER1);
-                if (cursor > 0) {
-                    String prevChar = mComposingText.getStrSegment(ComposingText.LAYER1, cursor - 1).string;
-                    String c = searchToggleCharacter(prevChar, ev.toggleTable, true);
+                if ((cursor > 0)
+                        && !(mEngineState.isConvertState())) {
+
+                    String search = mComposingText.getStrSegment(ComposingText.LAYER1, cursor - 1).string;
+                    String c = (String)ev.replaceTable.get(search);
                     if (c != null) {
-                        mComposingText.delete(ComposingText.LAYER1, false);
+                        mComposingText.delete(1, false);
                         appendStrSegment(new StrSegment(c));
                         updateViewStatusForPrediction(true, true);
                         ret = true;
+                        mStatus = STATUS_INPUT_EDIT;
                         break;
                     }
                 }
-            }
-            break;
+                break;
 
-        case InputJAJPEvent.REPLACE_CHAR:
-            int cursor = mComposingText.getCursor(ComposingText.LAYER1);
-            if ((cursor > 0)
-                && !(mEngineState.isConvertState())) {
+            case InputJAJPEvent.INPUT_KEY:
+                /* update shift/alt state */
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_ALT_LEFT:
+                    case KeyEvent.KEYCODE_ALT_RIGHT:
+                        if (keyEvent.getRepeatCount() == 0) {
+                            if (++mHardAlt > 2) { mHardAlt = 0; }
+                        }
+                        mAltPressing   = true;
+                        updateMetaKeyStateDisplay();
+                        return true;
 
-                String search = mComposingText.getStrSegment(ComposingText.LAYER1, cursor - 1).string;
-                String c = (String)ev.replaceTable.get(search);
-                if (c != null) {
-                    mComposingText.delete(1, false);
-                    appendStrSegment(new StrSegment(c));
-                    updateViewStatusForPrediction(true, true);
+                    case KeyEvent.KEYCODE_SHIFT_LEFT:
+                    case KeyEvent.KEYCODE_SHIFT_RIGHT:
+                        if (keyEvent.getRepeatCount() == 0) {
+                            if (++mHardShift > 2) { mHardShift = 0; }
+                        }
+                        mShiftPressing = true;
+                        updateMetaKeyStateDisplay();
+                        return true;
+                }
+
+                /* handle other key event */
+                ret = processKeyEvent(keyEvent);
+                break;
+
+            case InputJAJPEvent.INPUT_SOFT_KEY:
+                ret = processKeyEvent(keyEvent);
+                if (!ret) {
+                    mInputConnection.sendKeyEvent(keyEvent);
+                    mInputConnection.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, keyEvent.getKeyCode()));
                     ret = true;
-                    mStatus = STATUS_INPUT_EDIT;
-                    break;
                 }
-            }
-            break;
+                break;
 
-        case InputJAJPEvent.INPUT_KEY:
-            /* update shift/alt state */
-            switch (keyCode) {
-            case KeyEvent.KEYCODE_ALT_LEFT:
-            case KeyEvent.KEYCODE_ALT_RIGHT:
-                if (keyEvent.getRepeatCount() == 0) {
-                    if (++mHardAlt > 2) { mHardAlt = 0; }
-                }
-                mAltPressing   = true;
-                updateMetaKeyStateDisplay();
-                return true;
+            case InputJAJPEvent.CONVERT:
+                startConvert(EngineState.CONVERT_TYPE_RENBUN);
+                break;
 
-            case KeyEvent.KEYCODE_SHIFT_LEFT:
-            case KeyEvent.KEYCODE_SHIFT_RIGHT:
-                if (keyEvent.getRepeatCount() == 0) {
-                    if (++mHardShift > 2) { mHardShift = 0; }
-                }
-                mShiftPressing = true;
-                updateMetaKeyStateDisplay();
-                return true;
-            }
-
-            /* handle other key event */
-            ret = processKeyEvent(keyEvent);
-            break;
-
-        case InputJAJPEvent.INPUT_SOFT_KEY:
-            ret = processKeyEvent(keyEvent);
-            if (!ret) {
-                mInputConnection.sendKeyEvent(keyEvent);
-				mInputConnection.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, keyEvent.getKeyCode()));
-                ret = true;
-            }
-            break;
-
-        case InputJAJPEvent.SELECT_CANDIDATE:
-            if (isEnglishPrediction()) {
-                mComposingText.clear();
-            }
-            mStatus = commitText(ev.word);
-            break;
-
-        case InputJAJPEvent.CONVERT:           
-            startConvert(EngineState.CONVERT_TYPE_RENBUN);
-            break;
-
-        case InputJAJPEvent.COMMIT_COMPOSING_TEXT:
-            commitAllText();
-            break;
+            case InputJAJPEvent.COMMIT_COMPOSING_TEXT:
+                commitAllText();
+                break;
         }
 
         return ret;
+    }
+
+
+    @Subscribe
+    public void onInputJAJP(InputJAJPEvent event) {
+
+    }
+
+    @Subscribe
+    public void onSelectCandidate(SelectCandidateEvent event){
+        if (isEnglishPrediction()) {
+            mComposingText.clear();
+        }
+        mStatus = commitText(event.getWnnWord());
     }
 
     /** @see io.rivmt.keyboard.openwnn.OpenWnn#onEvaluateFullscreenMode */

@@ -58,7 +58,7 @@
     <Key android:codes="65346" android:keyLabel="b"/>
     <Key android:codes="65358" android:keyLabel="n"/>
     <Key android:codes="65357" android:keyLabel="m"/>
-    <Key android:codes="-100" android:keyIcon="@drawable/key_qwerty_del_landscape" android:iconPreview="@drawable/key_qwerty_del_b_landscape" android:keyWidth="15%p" 
+    <Key android:codes="-100" android:keyIcon="@drawable/key_qwerty_del_a_landscape" android:iconPreview="@drawable/key_qwerty_del_b_landscape" android:keyWidth="15%p"
          android:keyEdgeFlags="right" android:isRepeatable="true"/>
   </Row>
   
@@ -66,7 +66,7 @@
     <Key android:codes="-230" android:keyLabel="@string/key_change_mode"
 	 android:popupKeyboard="@xml/keyboard_switch_key_qwerty"
          android:keyWidth="15%p" android:keyEdgeFlags="left"/>
-    <Key android:codes="-106" android:keyIcon="@drawable/key_qwerty_pict_sym" android:iconPreview="@drawable/key_qwerty_pict_sym_b"
+    <Key android:codes="-106" android:keyIcon="@drawable/key_qwerty_pict_sym_a" android:iconPreview="@drawable/key_qwerty_pict_sym_b"
          android:keyWidth="15%p"/>
     <Key android:codes="12288" android:keyIcon="@drawable/key_qwerty_space" android:iconPreview="@drawable/key_qwerty_space_b" 
          android:keyWidth="30%p" android:isRepeatable="true"/>

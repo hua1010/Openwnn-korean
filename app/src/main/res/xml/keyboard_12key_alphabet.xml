@@ -22,7 +22,7 @@
     >
 
     <Row>
-        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse" android:iconPreview="@drawable/key_12key_reverse_b"
+        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse_a" android:iconPreview="@drawable/key_12key_reverse_b"
              android:keyEdgeFlags="left"/>
         <Key android:codes="-201" android:keyIcon="@drawable/key_12key_alpha1" android:iconPreview="@drawable/key_12key_alpha1_b"/>
         <Key android:codes="-202" android:keyIcon="@drawable/key_12key_alpha2" android:iconPreview="@drawable/key_12key_alpha2_b"/>
@@ -40,7 +40,7 @@
     </Row>
     
     <Row>
-        <Key android:codes="-222" android:keyIcon="@drawable/key_12key_pict_sym" android:iconPreview="@drawable/key_12key_pict_sym_b"
+        <Key android:codes="-222" android:keyIcon="@drawable/key_12key_pict_sym_a" android:iconPreview="@drawable/key_12key_pict_sym_b"
 	     android:keyEdgeFlags="left"/>
         <Key android:codes="-207" android:keyIcon="@drawable/key_12key_alpha7" android:iconPreview="@drawable/key_12key_alpha7_b"/>
         <Key android:codes="-208" android:keyIcon="@drawable/key_12key_alpha8" android:iconPreview="@drawable/key_12key_alpha8_b"/>

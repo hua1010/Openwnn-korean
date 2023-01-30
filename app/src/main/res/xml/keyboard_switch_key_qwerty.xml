@@ -29,7 +29,7 @@
 	 android:keyEdgeFlags="right"/>
   </Row>
   <Row>
-    <Key android:codes="-104" android:keyIcon="@drawable/key_mode_panel_kbd" android:iconPreview="@drawable/key_mode_panel_kbd_b"
+    <Key android:codes="-104" android:keyIcon="@drawable/key_mode_panel_kbd_a" android:iconPreview="@drawable/key_mode_panel_kbd_b"
 	 android:keyEdgeFlags="left"/>
     <Key android:codes="-306" android:keyLabel="@string/key_12key_switch_half_katakana"/>
     <Key android:codes="-307" android:keyLabel="@string/key_12key_switch_half_alphabet"/>

@@ -22,12 +22,12 @@
     >
   
     <Row>
-        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse" android:iconPreview="@drawable/key_12key_reverse_b"
+        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse_a" android:iconPreview="@drawable/key_12key_reverse_b"
              android:keyEdgeFlags="left"/>
         <Key android:codes="-201" android:keyLabel="@string/key_12key_katakana_1"/>
         <Key android:codes="-202" android:keyLabel="@string/key_12key_katakana_2"/>
         <Key android:codes="-203" android:keyLabel="@string/key_12key_katakana_3"/>
-        <Key android:codes="-214" android:keyIcon="@drawable/key_12key_del_landscape" android:iconPreview="@drawable/key_12key_del_b_landscape" android:isRepeatable="true"
+        <Key android:codes="-214" android:keyIcon="@drawable/key_12key_del_a_landscape" android:iconPreview="@drawable/key_12key_del_b_landscape" android:isRepeatable="true"
 	     android:keyEdgeFlags="right"/>
     </Row>
     
@@ -40,7 +40,7 @@
     </Row>
     
     <Row>
-        <Key android:codes="-222" android:keyIcon="@drawable/key_12key_pict_sym" android:iconPreview="@drawable/key_12key_pict_sym_b"
+        <Key android:codes="-222" android:keyIcon="@drawable/key_12key_pict_sym_a" android:iconPreview="@drawable/key_12key_pict_sym_b"
 	     android:keyEdgeFlags="left"/>
         <Key android:codes="-207" android:keyLabel="@string/key_12key_katakana_7"/>
         <Key android:codes="-208" android:keyLabel="@string/key_12key_katakana_8"/>

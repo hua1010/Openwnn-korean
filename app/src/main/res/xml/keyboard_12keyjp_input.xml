@@ -22,7 +22,7 @@
     >
   
     <Row>
-        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse" android:iconPreview="@drawable/key_12key_reverse_b"
+        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse_a" android:iconPreview="@drawable/key_12key_reverse_b"
              android:keyEdgeFlags="left"/>
         <Key android:codes="-201" android:keyIcon="@drawable/key_12key_hiragana1" android:iconPreview="@drawable/key_12key_hiragana1_b"/>
         <Key android:codes="-202" android:keyIcon="@drawable/key_12key_hiragana2" android:iconPreview="@drawable/key_12key_hiragana2_b"/>
