@@ -23,9 +23,12 @@ import io.rivmt.keyboard.openwnn.JAJP.OpenWnnEngineJAJP;
 import io.rivmt.keyboard.openwnn.JAJP.Romkan;
 import io.rivmt.keyboard.openwnn.JAJP.RomkanFullKatakana;
 import io.rivmt.keyboard.openwnn.JAJP.RomkanHalfKatakana;
+import io.rivmt.keyboard.openwnn.KOKR.DefaultSoftKeyboardKOKR;
 import io.rivmt.keyboard.openwnn.KOKR.HangulEngine;
 import io.rivmt.keyboard.openwnn.StrSegmentClause;
 import io.rivmt.keyboard.openwnn.event.InputJAJPEvent;
+import io.rivmt.keyboard.openwnn.event.InputKeyEvent;
+import io.rivmt.keyboard.openwnn.event.KeyUpEvent;
 import io.rivmt.keyboard.openwnn.event.OpenWnnEvent;
 import io.rivmt.keyboard.openwnn.event.SelectCandidateEvent;
 
@@ -61,6 +64,8 @@ import java.util.regex.Matcher;
  * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public class OpenWnnJAJP extends OpenWnn {
+
+    private final static String TAG = "OpenWnnJAJP";
     /**
      * Mode of the convert engine (Full-width KATAKANA).
      * Use with {@code OpenWnn.CHANGE_MODE} event.
@@ -730,6 +735,7 @@ public class OpenWnnJAJP extends OpenWnn {
                 break;
 
             case InputJAJPEvent.INPUT_KEY:
+                Log.d(TAG, "onEvent InputJAJPEvent.INPUT_KEY "+ keyCode);
                 /* update shift/alt state */
                 switch (keyCode) {
                     case KeyEvent.KEYCODE_ALT_LEFT:
@@ -790,6 +796,30 @@ public class OpenWnnJAJP extends OpenWnn {
         mStatus = commitText(event.getWnnWord());
     }
 
+    @Subscribe
+    public void onInputKey(InputKeyEvent event) {
+        KeyEvent keyEvent = event.getKeyEvent();
+        Log.d(TAG, "onInputKey: "+keyEvent.getAction());
+        boolean ret = processKeyEvent(keyEvent);
+        event.setCancelled(ret);
+    }
+
+    @Subscribe
+    public void onKeyUp(KeyUpEvent event) {
+        int key = event.getKeyEvent().getKeyCode();
+        //用于遥控器焦点获取
+        switch (key) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+                if(mInputViewManager instanceof DefaultSoftKeyboardJAJP) {
+                    ((DefaultSoftKeyboardJAJP) mInputViewManager).dispatchKeyEvent(event.getKeyEvent());
+                }
+        }
+    }
+
     /** @see io.rivmt.keyboard.openwnn.OpenWnn#onEvaluateFullscreenMode */
     @Override public boolean onEvaluateFullscreenMode() {
         /* never use full-screen mode */
@@ -832,6 +862,7 @@ public class OpenWnnJAJP extends OpenWnn {
      * @return 	{@code true} if the event is handled in this method.
      */
     private boolean processKeyEvent(KeyEvent ev) {
+        if(mInputConnection == null || !isInputViewShown()) return false;
         int key = ev.getKeyCode();
 
         /* keys which produce a glyph */
@@ -933,6 +964,20 @@ public class OpenWnnJAJP extends OpenWnn {
             mHardAlt = 0;
             updateMetaKeyStateDisplay();
             return true;
+        } else {
+            //用于遥控器焦点获取
+            switch (key) {
+                case KeyEvent.KEYCODE_DPAD_UP:
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                case KeyEvent.KEYCODE_DPAD_CENTER:
+                    if(mInputViewManager instanceof DefaultSoftKeyboardJAJP) {
+                        Log.d(TAG, "processKeyEvent: "+ev.getKeyCode());
+                        ((DefaultSoftKeyboardJAJP) mInputViewManager).dispatchKeyEvent(ev);
+                    }
+                    return true;
+            }
         }
 
         /* Functional key */

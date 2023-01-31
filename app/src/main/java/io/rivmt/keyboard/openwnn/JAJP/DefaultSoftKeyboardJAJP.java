@@ -17,19 +17,39 @@
 package io.rivmt.keyboard.openwnn.JAJP;
 
 import io.rivmt.keyboard.openwnn.*;
+import io.rivmt.keyboard.openwnn.KOKR.DefaultSoftKeyboardKOKR;
+import io.rivmt.keyboard.openwnn.KOKR.DefaultSoftKeyboardViewKOKR;
+import io.rivmt.keyboard.openwnn.KOKR.HangulEngine;
+import io.rivmt.keyboard.openwnn.event.InputCharEvent;
 import io.rivmt.keyboard.openwnn.event.InputJAJPEvent;
+import io.rivmt.keyboard.openwnn.event.InputSoftKeyEvent;
+import io.rivmt.keyboard.openwnn.event.InputTimeoutEvent;
+import io.rivmt.keyboard.openwnn.event.SoftKeyFlickEvent;
+import io.rivmt.keyboard.openwnn.event.SoftKeyGestureEvent;
+import io.rivmt.keyboard.openwnn.event.SoftKeyLongPressEvent;
 
+import android.content.res.Configuration;
+import android.os.Build;
+import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.util.SparseArray;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
 import android.inputmethodservice.KeyboardView;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +61,8 @@ import java.util.Locale;
  * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
+
+    private static final String TAG = "DefaultSoftKeyboardJAJP";
     /** Enable English word prediction on half-width alphabet mode */
     private static final boolean USE_ENGLISH_PREDICT = true;
 
@@ -74,6 +96,19 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
     /** Key code for NOP (no-operation) */
     private static final int KEYCODE_NOP = -310;
 
+    private static final int KEYCODE_RIGHT = -217;
+    private static final int KEYCODE_LEFT = -218;
+    private static final int KEYCODE_DOWN = -219;
+    private static final int KEYCODE_UP = -220;
+
+    private static final int KEYCODE_NON_SHIN_DEL = -510;
+    private static final int KEYCODE_TOGGLE_ONE_HAND_SIDE = -520;
+    private static final int mFlickSensitivity = 100;
+    private static final int mSpaceSlideSensitivity = 100;
+
+    private static final int mTimeoutDelay = 0;
+    private static final int SPACE_SLIDE_UNIT = 30;
+    private static final int BACKSPACE_SLIDE_UNIT = 250;
 
     /** Input mode toggle cycle table */
     private static final int[] JP_MODE_CYCLE_TABLE = {
@@ -290,6 +325,8 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
     /** Auto caps mode */
     private boolean mEnableAutoCaps = true;
 
+    protected boolean mShowKeyPreview = false;
+    protected int mVibrateDuration = 30;
 
     /** Default constructor */
     public DefaultSoftKeyboardJAJP() {
@@ -334,6 +371,296 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
             mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.COMMIT_COMPOSING_TEXT));
         }
     }
+
+    public void setPreviewEnabled(int x) {
+        switch(x) {
+            case KEYCODE_QWERTY_SHIFT:
+            case KEYCODE_QWERTY_ENTER:
+            case KEYCODE_JP12_ENTER:
+            case KEYCODE_QWERTY_BACKSPACE:
+            case KEYCODE_JP12_BACKSPACE:
+            case -10:
+            case KEYCODE_JP12_SPACE:
+                break;
+            default:
+                mKeyboardView.setPreviewEnabled(mShowKeyPreview);
+        }
+    }
+
+    public void updateKeyLabels() {
+        mKeyboardView.invalidateAllKeys();
+        mKeyboardView.requestLayout();
+    }
+
+
+    class LongClickHandler implements Runnable {
+        int keyCode;
+        boolean performed = false;
+        public LongClickHandler(int keyCode) {
+            this.keyCode = keyCode;
+        }
+        public void run() {
+            setPreviewEnabled(keyCode);
+            switch(keyCode) {
+                case KEYCODE_QWERTY_SHIFT:
+                    if(mShiftOn > 0) return;
+                    toggleShiftLock();
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_LEFT)));
+                    mCapsLock = true;
+                    performed = true;
+                    updateKeyLabels();
+                    return;
+
+                case KEYCODE_JP12_BACKSPACE:
+                case KEYCODE_QWERTY_BACKSPACE:
+                    mBackspaceLongClickHandler.postDelayed(new BackspaceLongClickHandler(), 50);
+                    return;
+            }
+            EventBus.getDefault().post(new SoftKeyLongPressEvent(keyCode));
+            try { mVibrator.vibrate(mVibrateDuration*2); } catch (Exception ex) { }
+            performed = true;
+        }
+    }
+
+    Handler mBackspaceLongClickHandler = new Handler();
+    class BackspaceLongClickHandler implements Runnable {
+        @Override
+        public void run() {
+            EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KEYCODE_NON_SHIN_DEL)));
+            mBackspaceLongClickHandler.postDelayed(new BackspaceLongClickHandler(), 50);
+        }
+    }
+
+    int mLongPressTimeout = 500;
+
+    private SparseArray<TouchPoint> mTouchPoints = new SparseArray<>();
+    class TouchPoint {
+        Keyboard.Key key;
+        int keyCode;
+
+        float downX, downY;
+        float dx, dy;
+        float beforeX, beforeY;
+        int space = -1;
+        int spaceDistance;
+        int backspace = -1;
+        int backspaceDistance;
+
+        LongClickHandler longClickHandler;
+        Handler handler;
+
+        public TouchPoint(Keyboard.Key key, float downX, float downY) {
+            this.key = key;
+            this.keyCode = key.codes[0];
+            this.downX = downX;
+            this.downY = downY;
+
+            key.onPressed();
+            mKeyboardView.invalidateAllKeys();
+
+            setPreviewEnabled(keyCode);
+
+            handler = new Handler();
+            handler.postDelayed(longClickHandler = new LongClickHandler(keyCode), mLongPressTimeout);
+
+            /* key click sound & vibration */
+            if (mVibrator != null) {
+                try { mVibrator.vibrate(mVibrateDuration); } catch (Exception ex) { }
+            }
+            if (mSound != null) {
+                try { mSound.seekTo(0); mSound.start(); } catch (Exception ex) { }
+            }
+        }
+
+        public boolean onMove(float x, float y) {
+            dx = x - downX;
+            dy = y - downY;
+            switch(keyCode) {
+                case KEYCODE_JP12_SPACE:
+                case -10:
+                    if(Math.abs(dx) >= mSpaceSlideSensitivity) space = keyCode;
+                    break;
+
+                case KEYCODE_JP12_BACKSPACE:
+                case KEYCODE_QWERTY_BACKSPACE:
+                    if(Math.abs(dx) >= BACKSPACE_SLIDE_UNIT) {
+                        backspace = keyCode;
+                        mBackspaceLongClickHandler.removeCallbacksAndMessages(null);
+                    }
+                    break;
+
+                default:
+                    space = -1;
+                    backspace = -1;
+                    break;
+            }
+            if(dy > mFlickSensitivity || dy < -mFlickSensitivity
+                    || dx < -mFlickSensitivity || dx > mFlickSensitivity || space != -1) {
+                handler.removeCallbacksAndMessages(null);
+            }
+            if(space != -1) {
+                spaceDistance += x - beforeX;
+                if(spaceDistance < -SPACE_SLIDE_UNIT) {
+                    spaceDistance = 0;
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT)));
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_LEFT)));
+                }
+                if(spaceDistance > +SPACE_SLIDE_UNIT) {
+                    spaceDistance = 0;
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT)));
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_RIGHT)));
+                }
+            }
+            if(backspace != -1) {
+                backspaceDistance += x - beforeX;
+                if(backspaceDistance < -BACKSPACE_SLIDE_UNIT) {
+                    backspaceDistance = 0;
+                    EventBus.getDefault().post(new SoftKeyGestureEvent(KeyEvent.KEYCODE_DEL, SoftKeyGestureEvent.Type.SLIDE_LEFT));
+                }
+                if(backspaceDistance > +BACKSPACE_SLIDE_UNIT) {
+                    backspaceDistance = 0;
+                    EventBus.getDefault().post(new SoftKeyGestureEvent(KeyEvent.KEYCODE_DEL, SoftKeyGestureEvent.Type.SLIDE_RIGHT));
+                }
+            }
+            beforeX = x;
+            beforeY = y;
+            return true;
+        }
+
+        public boolean onUp() {
+            key.onReleased(true);
+            mKeyboardView.setPreviewEnabled(false);
+            mBackspaceLongClickHandler.removeCallbacksAndMessages(null);
+            mKeyboardView.invalidateAllKeys();
+            handler.removeCallbacksAndMessages(null);
+            if(space != -1) {
+                space = -1;
+                return false;
+            }
+            if(backspace != -1) {
+                EventBus.getDefault().post(new SoftKeyGestureEvent(KeyEvent.KEYCODE_DEL, SoftKeyGestureEvent.Type.RELEASE));
+                backspace = -1;
+                return false;
+            }
+            // Swipe Detection
+            if(dx < -mFlickSensitivity*5) {
+                if(Math.abs(dx) > Math.abs(dy)) {
+                    swipeLeft();
+                }
+                return false;
+            }
+            if(dx > mFlickSensitivity*5) {
+                if(Math.abs(dx) > Math.abs(dy)) {
+                    swipeRight();
+                }
+                return false;
+            }
+
+            //Flick detection
+            if(dy > mFlickSensitivity) {
+                if(Math.abs(dy) > Math.abs(dx)) {
+                    EventBus.getDefault().post(new SoftKeyFlickEvent(keyCode, SoftKeyFlickEvent.Direction.DOWN));
+                }
+                return false;
+            }
+            if(dy < -mFlickSensitivity) {
+                if(Math.abs(dy) > Math.abs(dx)) {
+                    EventBus.getDefault().post(new SoftKeyFlickEvent(keyCode, SoftKeyFlickEvent.Direction.UP));
+                }
+                return false;
+            }
+            if(dx < -mFlickSensitivity) {
+                if(Math.abs(dx) > Math.abs(dy)) {
+                    EventBus.getDefault().post(new SoftKeyFlickEvent(keyCode, SoftKeyFlickEvent.Direction.LEFT));
+                }
+                return false;
+            }
+            if(dx > mFlickSensitivity) {
+                if(Math.abs(dx) > Math.abs(dy)) {
+                    EventBus.getDefault().post(new SoftKeyFlickEvent(keyCode, SoftKeyFlickEvent.Direction.RIGHT));
+                }
+                return false;
+            }
+            if(!longClickHandler.performed) onKey(keyCode);
+            return false;
+        }
+
+    }
+    class onKeyboardViewKeyListenor implements View.OnKeyListener{
+
+        @Override
+        public boolean onKey(View view, int i, KeyEvent keyEvent) {
+            if(keyEvent.getAction() != KeyEvent.ACTION_UP)
+                return false;
+            switch (keyEvent.getKeyCode()){
+                case KeyEvent.KEYCODE_DPAD_LEFT:
+                case KeyEvent.KEYCODE_DPAD_RIGHT:
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                case KeyEvent.KEYCODE_DPAD_UP:
+                case KeyEvent.KEYCODE_DPAD_CENTER:
+                    Log.d(TAG, "onKey: "+ keyEvent.getKeyCode());
+                    return true;
+            }
+            return false;
+        }
+    }
+
+
+    class OnKeyboardViewTouchListener implements View.OnTouchListener {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if(Build.VERSION.SDK_INT >= 8) {
+                int pointerIndex = event.getActionIndex();
+                int pointerId = event.getPointerId(pointerIndex);
+                int action = event.getActionMasked();
+                float x = event.getX(pointerIndex), y = event.getY(pointerIndex);
+                switch(action) {
+                    case MotionEvent.ACTION_DOWN:
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        TouchPoint point = new TouchPoint(findKey(mCurrentKeyboard, (int) x, (int) y), x, y);
+                        mTouchPoints.put(pointerId, point);
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        return mTouchPoints.get(pointerId).onMove(x, y);
+
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_POINTER_UP:
+                        mTouchPoints.get(pointerId).onUp();
+                        mTouchPoints.remove(pointerId);
+                        return true;
+
+                }
+            } else {
+                float x = event.getX(), y = event.getY();
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        TouchPoint point = new TouchPoint(findKey(mCurrentKeyboard, (int) x, (int) y), x, y);
+                        mTouchPoints.put(0, point);
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        return mTouchPoints.get(0).onMove(x, y);
+
+                    case MotionEvent.ACTION_UP:
+                        mTouchPoints.get(0).onUp();
+                        mTouchPoints.remove(0);
+                        return true;
+
+                }
+            }
+            return false;
+        }
+
+        private Keyboard.Key findKey(Keyboard keyboard, int x, int y) {
+            for(Keyboard.Key key : keyboard.getKeys()) {
+                if(key.isInside(x, y)) return key;
+            }
+            return null;
+        }
+
+    }
+
 
     /**
      * Change input mode
@@ -436,12 +763,36 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
 
      /** @see io.rivmt.keyboard.openwnn.DefaultSoftKeyboard#initView */
      @Override public View initView(OpenWnn parent, int width, int height) {
+         mWnn = parent;
+         mDisplayMode =
+                 (parent.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+                         ? LANDSCAPE : PORTRAIT;
+         createKeyboards(parent);
+         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(parent);
+         String skin = pref.getString("keyboard_skin", mWnn.getResources().getString(R.string.keyboard_skin_id_default));
+         int id = parent.getResources().getIdentifier("keyboard_ja_" + skin, "layout", parent.getPackageName());
+         if(id == 0) id = R.layout.keyboard_ja_white;
 
-        View view = super.initView(parent, width, height);
+         mKeyboardView = (KeyboardView) mWnn.getLayoutInflater().inflate(id, null);
+         mKeyboardView.setOnKeyboardActionListener(this);
+         mCurrentKeyboard = null;
+
+         mMainView = (ViewGroup) parent.getLayoutInflater().inflate(R.layout.keyboard_default_main, null);
+         mSubView = (ViewGroup) parent.getLayoutInflater().inflate(R.layout.keyboard_default_sub, null);
+         if (!mHardKeyboardHidden) {
+             mMainView.addView(mSubView);
+         } else if (mKeyboardView != null) {
+             mKeyboardView.setFocusable(true);
+             mKeyboardView.setFocusableInTouchMode(true);
+             mMainView.addView(mKeyboardView);
+         }
         changeKeyboard(mKeyboard[mCurrentLanguage][mDisplayMode][mCurrentKeyboardType][mShiftOn][mCurrentKeyMode][0]);
-        
-        return view;
-     }
+
+        mKeyboardView.setOnTouchListener(new OnKeyboardViewTouchListener());
+        mKeyboardView.setOnKeyListener(new onKeyboardViewKeyListenor());
+
+        return mMainView;
+    }
 
     /** @see io.rivmt.keyboard.openwnn.DefaultSoftKeyboard#changeKeyboardType */
     @Override public void changeKeyboardType(int type) {
@@ -460,200 +811,314 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
 
     /** @see io.rivmt.keyboard.openwnn.DefaultSoftKeyboard#onKey */
     @Override public void onKey(int primaryCode, int[] keyCodes) {
+        super.onKey(primaryCode,keyCodes);
+    }
+
+    Handler mTimeoutHandler;
+    class TimeOutHandler implements Runnable {
+        @Override
+        public void run() {
+            EventBus.getDefault().post(new InputTimeoutEvent());
+        }
+    }
+
+    public void dispatchKeyEvent(KeyEvent event){
+        if(mKeyboardView != null) {
+            //mKeyboardView.dispatchKeyShortcutEvent(event);
+            //mKeyboardView.dispatchKeyEvent(event);
+            if(mKeyboardView instanceof  DefaultSoftKeyboardViewJAJP) {
+                Log.d(TAG, "[hangup]dispatchKeyEvent........." + event.getAction());
+                DefaultSoftKeyboardViewJAJP keyboardView = ((DefaultSoftKeyboardViewJAJP) mKeyboardView);
+                keyboardView.moveToNextKey(event);
+                if(event.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER && event.getAction() == KeyEvent.ACTION_UP){
+                    onKey(keyboardView.getCurrentKey());
+                }
+            }
+            //mMainView.dispatchKeyEvent(event);
+        }
+    }
+
+    public void onKey(int primaryCode) {
+
+        Log.d(TAG, "onKey: primaryCode:" + primaryCode);
+
+        if(mTimeoutHandler != null) {
+            mTimeoutHandler.removeCallbacksAndMessages(null);
+            mTimeoutHandler = null;
+        }
 
         switch (primaryCode) {
-        case KEYCODE_JP12_TOGGLE_MODE:
-        case KEYCODE_QWERTY_TOGGLE_MODE:
-            nextKeyMode();
-            break;
+            case KEYCODE_JP12_TOGGLE_MODE:
+            case KEYCODE_QWERTY_TOGGLE_MODE:
+                nextKeyMode();
+                break;
 
-        case DefaultSoftKeyboard.KEYCODE_QWERTY_BACKSPACE:
-        case KEYCODE_JP12_BACKSPACE:
-            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
-                                          new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)));
-            break;
+            case DefaultSoftKeyboard.KEYCODE_QWERTY_BACKSPACE:
+            case KEYCODE_JP12_BACKSPACE:
+                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
+                        new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)));
+                break;
 
-        case DefaultSoftKeyboard.KEYCODE_QWERTY_SHIFT:
-            toggleShiftLock();
-            break;
-            
-        case DefaultSoftKeyboard.KEYCODE_QWERTY_ALT:
-            processAltKey();
-            break;
+            case DefaultSoftKeyboard.KEYCODE_QWERTY_SHIFT:
+                toggleShiftLock();
+                break;
 
-        case KEYCODE_QWERTY_ENTER:
-        case KEYCODE_JP12_ENTER:
-            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
-                                          new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)));
-            break;
+            case DefaultSoftKeyboard.KEYCODE_QWERTY_ALT:
+                processAltKey();
+                break;
 
-        case KEYCODE_JP12_REVERSE:
-            if (!mNoInput) {
-                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.TOGGLE_REVERSE_CHAR, mCurrentCycleTable));
-            }
-            break;
+            case KEYCODE_QWERTY_ENTER:
+            case KEYCODE_JP12_ENTER:
+                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
+                        new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)));
+                break;
 
-        case KEYCODE_QWERTY_KBD:
-            changeKeyboardType(KEYBOARD_12KEY);
-            break;
-            
-        case KEYCODE_JP12_KBD:
-            changeKeyboardType(KEYBOARD_QWERTY);
-            break;
+            case KEYCODE_JP12_REVERSE:
+                if (!mNoInput) {
+                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.TOGGLE_REVERSE_CHAR, mCurrentCycleTable));
+                }
+                break;
 
-        case KEYCODE_JP12_EMOJI:
-        case KEYCODE_QWERTY_EMOJI:
+            case KEYCODE_QWERTY_KBD:
+                changeKeyboardType(KEYBOARD_12KEY);
+                break;
+
+            case KEYCODE_JP12_KBD:
+                changeKeyboardType(KEYBOARD_QWERTY);
+                break;
+
+            case KEYCODE_JP12_EMOJI:
+            case KEYCODE_QWERTY_EMOJI:
                 commitText();
                 mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.CHANGE_MODE, OpenWnnJAJP.ENGINE_MODE_SYMBOL));
-            break;
+                break;
 
-        case KEYCODE_JP12_1:
-        case KEYCODE_JP12_2:
-        case KEYCODE_JP12_3:
-        case KEYCODE_JP12_4:
-        case KEYCODE_JP12_5:
-        case KEYCODE_JP12_6:
-        case KEYCODE_JP12_7:
-        case KEYCODE_JP12_8:
-        case KEYCODE_JP12_9:
-        case KEYCODE_JP12_0:
-        case KEYCODE_JP12_SHARP:
-        	/* Processing to input by ten key */
-        	if (mInputType == INPUT_TYPE_INSTANT) {
-        		/* Send a input character directly if instant input type is selected */
-                commitText();
-                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR,
-                                              mCurrentInstantTable[getTableIndex(primaryCode)]));
-            } else {
-                if ((mPrevInputKeyCode != primaryCode)) {
-                    if ((mCurrentKeyMode == KEYMODE_JA_HALF_ALPHABET)
-                            && (primaryCode == KEYCODE_JP12_SHARP)) {
-                    	/* Commit text by symbol character (',' '.') when alphabet input mode is selected */
-                    	commitText();
-                    }
-                }
-
-                /* Convert the key code to the table index and send the toggle event with the table index */
-                String[][] cycleTable = getCycleTable();
-                if (cycleTable == null) {
-                    Log.e("OpenWnn", "not founds cycle table");
+            case KEYCODE_JP12_1:
+            case KEYCODE_JP12_2:
+            case KEYCODE_JP12_3:
+            case KEYCODE_JP12_4:
+            case KEYCODE_JP12_5:
+            case KEYCODE_JP12_6:
+            case KEYCODE_JP12_7:
+            case KEYCODE_JP12_8:
+            case KEYCODE_JP12_9:
+            case KEYCODE_JP12_0:
+            case KEYCODE_JP12_SHARP:
+                /* Processing to input by ten key */
+                if (mInputType == INPUT_TYPE_INSTANT) {
+                    /* Send a input character directly if instant input type is selected */
+                    commitText();
+                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR,
+                            mCurrentInstantTable[getTableIndex(primaryCode)]));
                 } else {
-                    int index = getTableIndex(primaryCode);
-                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.TOGGLE_CHAR, cycleTable[index]));
-                    mCurrentCycleTable = cycleTable[index];
-                }
-                mPrevInputKeyCode = primaryCode;
-            }
-            break;
+                    if ((mPrevInputKeyCode != primaryCode)) {
+                        if ((mCurrentKeyMode == KEYMODE_JA_HALF_ALPHABET)
+                                && (primaryCode == KEYCODE_JP12_SHARP)) {
+                            /* Commit text by symbol character (',' '.') when alphabet input mode is selected */
+                            commitText();
+                        }
+                    }
 
-        case KEYCODE_JP12_ASTER:
-            if (mInputType == INPUT_TYPE_INSTANT) {
-                commitText();
-                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR,
-                                              mCurrentInstantTable[getTableIndex(primaryCode)]));
-            } else {
-            	if (!mNoInput) {
-            		/* Processing to toggle Dakuten, Handakuten, and capital */
-            		HashMap replaceTable = getReplaceTable();
-                    if (replaceTable == null) {
-                        Log.e("OpenWnn", "not founds replace table");
+                    /* Convert the key code to the table index and send the toggle event with the table index */
+                    String[][] cycleTable = getCycleTable();
+                    if (cycleTable == null) {
+                        Log.e(TAG, "not founds cycle table");
                     } else {
-                        mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.REPLACE_CHAR, replaceTable));
-                        mPrevInputKeyCode = primaryCode;
+                        int index = getTableIndex(primaryCode);
+                        mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.TOGGLE_CHAR, cycleTable[index]));
+                        mCurrentCycleTable = cycleTable[index];
+                    }
+                    mPrevInputKeyCode = primaryCode;
+                }
+                break;
+
+            case KEYCODE_JP12_ASTER:
+                if (mInputType == INPUT_TYPE_INSTANT) {
+                    commitText();
+                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR,
+                            mCurrentInstantTable[getTableIndex(primaryCode)]));
+                } else {
+                    if (!mNoInput) {
+                        /* Processing to toggle Dakuten, Handakuten, and capital */
+                        HashMap replaceTable = getReplaceTable();
+                        if (replaceTable == null) {
+                            Log.e("OpenWnn", "not founds replace table");
+                        } else {
+                            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.REPLACE_CHAR, replaceTable));
+                            mPrevInputKeyCode = primaryCode;
+                        }
                     }
                 }
-            }
-            break;
+                break;
 
-        case KEYCODE_SWITCH_FULL_HIRAGANA:
-        	/* Change mode to Full width hiragana */
-        	changeKeyMode(KEYMODE_JA_FULL_HIRAGANA);
-            break;
+            case KEYCODE_SWITCH_FULL_HIRAGANA:
+                /* Change mode to Full width hiragana */
+                changeKeyMode(KEYMODE_JA_FULL_HIRAGANA);
+                break;
 
-        case KEYCODE_SWITCH_FULL_KATAKANA:
-        	/* Change mode to Full width katakana */
-        	changeKeyMode(KEYMODE_JA_FULL_KATAKANA);
-            break;
+            case KEYCODE_SWITCH_FULL_KATAKANA:
+                /* Change mode to Full width katakana */
+                changeKeyMode(KEYMODE_JA_FULL_KATAKANA);
+                break;
 
-        case KEYCODE_SWITCH_FULL_ALPHABET:
-        	/* Change mode to Full width alphabet */
-        	changeKeyMode(KEYMODE_JA_FULL_ALPHABET);
-            break;
+            case KEYCODE_SWITCH_FULL_ALPHABET:
+                /* Change mode to Full width alphabet */
+                changeKeyMode(KEYMODE_JA_FULL_ALPHABET);
+                break;
 
-        case KEYCODE_SWITCH_FULL_NUMBER:
-        	/* Change mode to Full width numeric */
-        	changeKeyMode(KEYMODE_JA_FULL_NUMBER);
-            break;
+            case KEYCODE_SWITCH_FULL_NUMBER:
+                /* Change mode to Full width numeric */
+                changeKeyMode(KEYMODE_JA_FULL_NUMBER);
+                break;
 
-        case KEYCODE_SWITCH_HALF_KATAKANA:
-        	/* Change mode to Half width katakana */
-        	changeKeyMode(KEYMODE_JA_HALF_KATAKANA);
-            break;
+            case KEYCODE_SWITCH_HALF_KATAKANA:
+                /* Change mode to Half width katakana */
+                changeKeyMode(KEYMODE_JA_HALF_KATAKANA);
+                break;
 
-        case KEYCODE_SWITCH_HALF_ALPHABET: 
-        	/* Change mode to Half width alphabet */
-        	changeKeyMode(KEYMODE_JA_HALF_ALPHABET);
-            break;
+            case KEYCODE_SWITCH_HALF_ALPHABET:
+                /* Change mode to Half width alphabet */
+                changeKeyMode(KEYMODE_JA_HALF_ALPHABET);
+                break;
 
-        case KEYCODE_SWITCH_HALF_NUMBER:
-        	/* Change mode to Half width numeric */
-        	changeKeyMode(KEYMODE_JA_HALF_NUMBER);
-            break;
+            case KEYCODE_SWITCH_HALF_NUMBER:
+                /* Change mode to Half width numeric */
+                changeKeyMode(KEYMODE_JA_HALF_NUMBER);
+                break;
 
 
-        case KEYCODE_SELECT_CASE:
-            int shifted = (mShiftOn == 0) ? 1 : 0;
-            Keyboard newKeyboard = getShiftChangeKeyboard(shifted);
-            if (newKeyboard != null) {
-                mShiftOn = shifted;
-                changeKeyboard(newKeyboard);
-            }
-            break;
-
-        case KEYCODE_JP12_SPACE:
-            if ((mCurrentKeyMode == KEYMODE_JA_FULL_HIRAGANA) && !mNoInput) {
-                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.CONVERT));
-            } else {
-                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR, ' '));
-            }
-            break;
-
-        case KEYCODE_EISU_KANA:
-            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.CHANGE_MODE, OpenWnnJAJP.ENGINE_MODE_EISU_KANA));
-            break;
-
-        case KEYCODE_JP12_CLOSE:
-            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_KEY,
-                                          new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK)));
-            break;
-            
-        case KEYCODE_JP12_LEFT:
-            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
-                                          new KeyEvent(KeyEvent.ACTION_DOWN,
-                                                       KeyEvent.KEYCODE_DPAD_LEFT)));
-            break;
-            
-        case KEYCODE_JP12_RIGHT:
-            mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
-                                          new KeyEvent(KeyEvent.ACTION_DOWN,
-                                                       KeyEvent.KEYCODE_DPAD_RIGHT)));
-            break;
-        case KEYCODE_NOP:
-            break;
-
-        default:
-            if (primaryCode >= 0) {
-                if (mKeyboardView.isShifted()) {
-                    primaryCode = Character.toUpperCase(primaryCode);
+            case KEYCODE_SELECT_CASE:
+                int shifted = (mShiftOn == 0) ? 1 : 0;
+                Keyboard newKeyboard = getShiftChangeKeyboard(shifted);
+                if (newKeyboard != null) {
+                    mShiftOn = shifted;
+                    changeKeyboard(newKeyboard);
                 }
-                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR, (char)primaryCode));
-            }
-            break;
+                break;
+
+            case KEYCODE_JP12_SPACE:
+                if ((mCurrentKeyMode == KEYMODE_JA_FULL_HIRAGANA) && !mNoInput) {
+                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.CONVERT));
+                } else {
+                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR, ' '));
+                }
+                break;
+
+            case KEYCODE_EISU_KANA:
+                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.CHANGE_MODE, OpenWnnJAJP.ENGINE_MODE_EISU_KANA));
+                break;
+
+            case KEYCODE_JP12_CLOSE:
+                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_KEY,
+                        new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK)));
+                break;
+
+            case KEYCODE_JP12_LEFT:
+                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
+                        new KeyEvent(KeyEvent.ACTION_DOWN,
+                                KeyEvent.KEYCODE_DPAD_LEFT)));
+                break;
+
+            case KEYCODE_JP12_RIGHT:
+                mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_SOFT_KEY,
+                        new KeyEvent(KeyEvent.ACTION_DOWN,
+                                KeyEvent.KEYCODE_DPAD_RIGHT)));
+                break;
+            case KEYCODE_NOP:
+                break;
+
+            default:
+                if (primaryCode >= 0) {
+                    if (mKeyboardView.isShifted()) {
+                        primaryCode = Character.toUpperCase(primaryCode);
+                    }
+                    mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.INPUT_CHAR, (char)primaryCode));
+                }
+                break;
         }
 
         /* update shift key's state */
         if (!mCapsLock && (primaryCode != DefaultSoftKeyboard.KEYCODE_QWERTY_SHIFT)) {
             setShiftByEditorInfo();
+        }
+
+        switch(primaryCode) {
+            case KEYCODE_CHANGE_LANG:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KEYCODE_CHANGE_LANG)));
+                break;
+
+            case KEYCODE_UP:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_UP)));
+                break;
+
+            case KEYCODE_DOWN:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN)));
+                break;
+
+            case KEYCODE_LEFT:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT)));
+                break;
+
+            case KEYCODE_RIGHT:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT)));
+                break;
+
+            case KEYCODE_JP12_BACKSPACE:
+            case KEYCODE_QWERTY_BACKSPACE:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL)));
+                break;
+
+            case KEYCODE_QWERTY_SHIFT:
+                mCapsLock = false;
+                toggleShiftLock();
+                updateKeyLabels();
+                if(mShiftOn == 0) {
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_SHIFT_LEFT)));
+                } else {
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SHIFT_RIGHT)));;
+                }
+                break;
+
+            case KEYCODE_QWERTY_ALT:
+                processAltKey();
+                break;
+
+            case KEYCODE_JP12_ENTER:
+            case KEYCODE_QWERTY_ENTER:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)));
+                break;
+
+            case KEYCODE_JP12_SPACE:
+            case -10:
+                EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_SPACE)));
+                break;
+
+            default:
+                if((primaryCode <= -200 && primaryCode > -300) || (primaryCode <= -2000 && primaryCode > -3000)) {
+                    EventBus.getDefault().post(new InputSoftKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, primaryCode)));
+                } else if(primaryCode >= 0) {
+                    if(mKeyboardView.isShifted()) {
+                        primaryCode = Character.toUpperCase(primaryCode);
+                    }
+                    EventBus.getDefault().post(new InputCharEvent((char) primaryCode));
+
+                    if(mKeyboardView.isShifted()) {
+                        if(!mCapsLock) {
+                            onKey(KEYCODE_QWERTY_SHIFT);
+                            OpenWnnKOKR kokr = (OpenWnnKOKR) mWnn;
+                            if(!mHardKeyboardHidden) kokr.resetHardShift(false);
+                            kokr.updateMetaKeyStateDisplay();
+                        }
+                    }
+                }
+                break;
+        }
+        if (!mCapsLock && (primaryCode != DefaultSoftKeyboard.KEYCODE_QWERTY_SHIFT)) {
+
+        }
+        if(mTimeoutHandler == null && mTimeoutDelay > 0) {
+            mTimeoutHandler = new Handler();
+            mTimeoutHandler.postDelayed(new TimeOutHandler(), mTimeoutDelay);
         }
     }
 
@@ -706,6 +1171,8 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
             setDefaultKeyboard();
             mLastInputType = inputType;
         }
+
+        mShowKeyPreview = pref.getBoolean("popup_preview", true);
 
         setShiftByEditorInfo();
     }
