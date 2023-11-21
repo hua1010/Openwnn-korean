@@ -648,6 +648,8 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
         textView.setId(mWordCount);
         textView.setVisibility(View.VISIBLE);
         textView.setPressed(false);
+        textView.setFocusable(true);
+        textView.setFocusableInTouchMode(true);
 
         if (isCategory) {
             textView.setOnClickListener(null);
