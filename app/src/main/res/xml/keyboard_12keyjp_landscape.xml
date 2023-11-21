@@ -22,21 +22,21 @@
     >
   
     <Row>
-        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse_a" android:iconPreview="@drawable/key_12key_reverse_b"
-             android:keyEdgeFlags="left"/>
+        <Key android:codes="-218" android:keyLabel="@string/key_left_arrow" android:isRepeatable="true" android:keyEdgeFlags="left"/>
         <Key android:codes="-201" android:keyLabel="@string/key_12key_1"/>
         <Key android:codes="-202" android:keyLabel="@string/key_12key_2"/>
         <Key android:codes="-203" android:keyLabel="@string/key_12key_3"/>
-        <Key android:codes="-214" android:keyIcon="@drawable/key_12key_del_a_landscape" android:iconPreview="@drawable/key_12key_del_b_landscape" android:isRepeatable="true"
-	     android:keyEdgeFlags="right"/>
+        <Key android:codes="-217" android:keyLabel="@string/key_right_arrow" android:isRepeatable="true" android:keyEdgeFlags="right"/>
     </Row>
     
     <Row>
-        <Key android:codes="-218" android:keyLabel="@string/key_left_arrow" android:isRepeatable="true" android:keyEdgeFlags="left"/>
+        <Key android:codes="-219" android:keyIcon="@drawable/key_12key_reverse_a" android:iconPreview="@drawable/key_12key_reverse_b"
+            android:keyEdgeFlags="left"/>
         <Key android:codes="-204" android:keyLabel="@string/key_12key_4"/>
         <Key android:codes="-205" android:keyLabel="@string/key_12key_5"/>
         <Key android:codes="-206" android:keyLabel="@string/key_12key_6"/>
-        <Key android:codes="-217" android:keyLabel="@string/key_right_arrow" android:isRepeatable="true" android:keyEdgeFlags="right"/>
+        <Key android:codes="-214" android:keyIcon="@drawable/key_12key_del_a_landscape" android:iconPreview="@drawable/key_12key_del_b_landscape" android:isRepeatable="true"
+            android:keyEdgeFlags="right"/>
     </Row>
     
     <Row>

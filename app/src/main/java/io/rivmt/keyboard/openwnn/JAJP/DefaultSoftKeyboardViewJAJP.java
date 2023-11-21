@@ -154,10 +154,10 @@ public class DefaultSoftKeyboardViewJAJP extends KeyboardView {
 			case KeyEvent.KEYCODE_DPAD_UP:{
 				if(event.getAction() == KeyEvent.ACTION_UP) break;
 				int indices = 0 , target, min = 0;
-				if(key.y - key.height >= 0)
+				//if(key.y - key.height >= 0)
 					target = (key.y - key.height) * 100 + key.x;
-				else
-					target = (getHeight() - key.height) * 100 + key.x;
+				//else
+					//target = (getHeight() - key.height) * 100 + key.x;
 				for (int index = 0;index < keys.size(); index++) {
 					Key tmp = keys.get(index);
 					if(index == 0) min = Math.abs(tmp.y * 100 + tmp.x - target);
@@ -229,5 +229,12 @@ public class DefaultSoftKeyboardViewJAJP extends KeyboardView {
 
 	public void setKeyboardDisplay(SoftKeyboardDisplay keyboardDisplay) {
 		this.keyboardDisplay = keyboardDisplay;
+	}
+
+	public boolean upDisable(){
+		Keyboard keyboard = this.getKeyboard();
+		List<Key> keys = keyboard.getKeys();
+		Key key = keys.get(focusIndex);
+		return key.x == 0 && key.y == 0;
 	}
 }

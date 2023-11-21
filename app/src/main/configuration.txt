@@ -1,0 +1,813 @@
+-injars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/APPS/KorOpenWnn_intermediates/classes.jar
+-outjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/APPS/KorOpenWnn_intermediates/classes-proguard.jar
+
+
+-systemjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/JAVA_LIBRARIES/core-oj_intermediates/classes-header.jar
+-systemjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/JAVA_LIBRARIES/core-libart_intermediates/classes-header.jar
+-systemjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/JAVA_LIBRARIES/ext_intermediates/classes-header.jar
+-systemjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes-header.jar
+-systemjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/JAVA_LIBRARIES/okhttp_intermediates/classes-header.jar
+-systemjars /media/workspace0/shichunhua/9630/MTK9630/out/target/common/obj/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes-header.jar
+
+-dontskipnonpubliclibraryclassmembers
+-forceprocessing
+-printusage /media/workspace0/shichunhua/9630/MTK9630/packages/inputmethods/OpenWnn-Korean/app/src/main/usage.txt
+-dontoptimize
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-printmapping /media/workspace0/shichunhua/9630/MTK9630/packages/inputmethods/OpenWnn-Korean/app/src/main/mapping.txt
+-useuniqueclassmembernames
+-keepattributes *Annotation*,*Annotation*,*Annotation*,*Annotation*,*Annotation*,*Annotation*,*Annotation*,*Annotation*,Signature
+-dontpreverify
+-verbose
+-dontnote
+-dontwarn android.support.**,androidx.***,android.support.**,androidx.***
+-printconfiguration /media/workspace0/shichunhua/9630/MTK9630/packages/inputmethods/OpenWnn-Korean/app/src/main/configuration.txt
+-printseeds /media/workspace0/shichunhua/9630/MTK9630/packages/inputmethods/OpenWnn-Korean/app/src/main/seeds.txt
+
+
+# Don't obfuscate. We only need dead code striping.
+# -dontobfuscate
+# Add this flag in your package's own configuration if it's needed.
+# -flattenpackagehierarchy
+# Keep classes and methods that have the guava @VisibleForTesting annotation
+-keep @**.VisibleForTesting class *
+
+-keepclassmembers class * {
+    @**.VisibleForTesting
+    <fields>;
+    @**.VisibleForTesting
+    <methods>;
+}
+
+# For enumeration classes, see http://proguard.sourceforge.net/manual/examples.html#enumerations
+-keepclassmembers enum  * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# For native methods, see http://proguard.sourceforge.net/manual/examples.html#native
+-keepclasseswithmembers,allowshrinking class * {
+    native <methods>;
+}
+
+# class$ methods are inserted by some compilers to implement .class construct,
+# see http://proguard.sourceforge.net/manual/examples.html#library
+-keepclassmembers,allowshrinking class * {
+    java.lang.Class class$(java.lang.String);
+    java.lang.Class class$(java.lang.String,boolean);
+}
+
+# Keep serializable classes and necessary members for serializable classes
+# Copied from the ProGuard manual at http://proguard.sourceforge.net.
+-keep,allowshrinking class * extends java.io.Serializable
+
+-keepclassmembers class * extends java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    !static !transient <fields>;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+# Keep Throwable's constructor that takes a String argument.
+-keepclassmembers class * extends java.lang.Throwable {
+    <init>(java.lang.String);
+}
+
+# Please specify classes to be kept explicitly in your package's configuration.
+# -keep class * extends android.app.Activity
+# -keep class * extends android.view.View
+# -keep class * extends android.app.Service
+# -keep class * extends android.content.BroadcastReceiver
+# -keep class * extends android.content.ContentProvider
+# -keep class * extends android.preference.Preference
+# -keep class * extends android.app.BackupAgent
+# Parcelable CREATORs must be kept for Parcelable functionality
+-keep class * extends android.os.Parcelable {
+    public static final ** CREATOR;
+}
+
+-keepclassmembers enum  android.arch.lifecycle.Lifecycle$Event {
+    <fields>;
+}
+
+-keep class * extends android.arch.lifecycle.LifecycleObserver
+
+-keep class * extends android.arch.lifecycle.GeneratedAdapter {
+    <init>(...);
+}
+
+-keepclassmembers class ** {
+    @android.arch.lifecycle.OnLifecycleEvent
+    <fields>;
+    @android.arch.lifecycle.OnLifecycleEvent
+    <methods>;
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-versionedparcelable-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-media-compat-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2017 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# Prevent Parcelable objects from being removed or renamed.
+-keep class android.support.v4.media.** extends android.os.Parcelable {
+    public static final android.os.Parcelable$Creator *;
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-core-utils-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-documentfile-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-loader-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/extras/app-toolkit/android-arch-lifecycle-livedata-core-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/extras/app-toolkit/android-arch-core-runtime-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/extras/app-toolkit/android-arch-lifecycle-viewmodel-nodeps/android_common/aar/proguard.txt
+-keep class * extends android.arch.lifecycle.ViewModel {
+    <init>();
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-localbroadcastmanager-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-print-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-core-ui-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-customview-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-viewpager-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/support/android-support-coordinatorlayout-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2016 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# CoordinatorLayout resolves the behaviors of its child components with reflection.
+-keep public class * extends android.support.design.widget.CoordinatorLayout$Behavior {
+    public <init>(android.content.Context,android.util.AttributeSet);
+    public <init>();
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2015 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# CoordinatorLayout resolves the behaviors of its child components with reflection.
+-keep public class * extends androidx.coordinatorlayout.widget.CoordinatorLayout$Behavior {
+    public <init>(android.content.Context,android.util.AttributeSet);
+    public <init>();
+}
+
+-keepclassmembers enum  androidx.lifecycle.Lifecycle$Event {
+    <fields>;
+}
+
+-keep class * extends androidx.lifecycle.LifecycleObserver
+
+-keep class * extends androidx.lifecycle.GeneratedAdapter {
+    <init>(...);
+}
+
+-keepclassmembers class ** {
+    @androidx.lifecycle.OnLifecycleEvent
+    <fields>;
+    @androidx.lifecycle.OnLifecycleEvent
+    <methods>;
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.versionedparcelable_versionedparcelable-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.legacy_legacy-support-core-ui-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.legacy_legacy-support-core-utils-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.documentfile_documentfile-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.loader_loader-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.lifecycle_lifecycle-livedata-core-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.arch.core_core-runtime-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.lifecycle_lifecycle-viewmodel-nodeps/android_common/aar/proguard.txt
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>();
+}
+
+-keep class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.localbroadcastmanager_localbroadcastmanager-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.print_print-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.customview_customview-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.viewpager_viewpager-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.coordinatorlayout_coordinatorlayout-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2016 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# CoordinatorLayout resolves the behaviors of its child components with reflection.
+-keep public class * extends androidx.coordinatorlayout.widget.CoordinatorLayout$Behavior {
+    public <init>(android.content.Context,android.util.AttributeSet);
+    public <init>();
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.drawerlayout_drawerlayout-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.slidingpanelayout_slidingpanelayout-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.interpolator_interpolator-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.swiperefreshlayout_swiperefreshlayout-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.asynclayoutinflater_asynclayoutinflater-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.cursoradapter_cursoradapter-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.fragment_fragment-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.transition_transition-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2017 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# Keep a field in transition that is used to keep a reference to weakly-referenced object
+-keepclassmembers class androidx.transition.ChangeBounds$* extends android.animation.AnimatorListenerAdapter {
+    androidx.transition.ChangeBounds$ViewBounds mViewBounds;
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2018 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# Ensure that reflectively-loaded inflater is not obfuscated. This can be
+# removed when we stop supporting AAPT1 builds.
+-keep,allowshrinking class android.support.v7.app.AppCompatViewInflater
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.vectordrawable_vectordrawable-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.vectordrawable_vectordrawable-animated-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2016 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# keep setters in VectorDrawables so that animations can still work.
+-keepclassmembers class androidx.vectordrawable.graphics.drawable.VectorDrawableCompat$* {
+    void set*(***);
+    *** get*();
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.cardview_cardview-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.recyclerview_recyclerview-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2015 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# When layoutManager xml attribute is used, RecyclerView inflates
+# LayoutManagers' constructors using reflection.
+-keep public class * extends androidx.recyclerview.widget.RecyclerView$LayoutManager {
+    public <init>(...);
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2018 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# Ensure that reflectively-loaded inflater is not obfuscated. This can be
+# removed when we stop supporting AAPT1 builds.
+-keep,allowshrinking class android.support.v7.app.AppCompatViewInflater
+
+-keepclassmembers enum  androidx.lifecycle.Lifecycle$Event {
+    <fields>;
+}
+
+-keep class * extends androidx.lifecycle.LifecycleObserver
+
+-keep class * extends androidx.lifecycle.GeneratedAdapter {
+    <init>(...);
+}
+
+-keepclassmembers class ** {
+    @androidx.lifecycle.OnLifecycleEvent
+    <fields>;
+    @androidx.lifecycle.OnLifecycleEvent
+    <methods>;
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.versionedparcelable_versionedparcelable-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.cursoradapter_cursoradapter-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.legacy_legacy-support-core-utils-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.documentfile_documentfile-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.loader_loader-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.lifecycle_lifecycle-livedata-core-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.arch.core_core-runtime-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.lifecycle_lifecycle-viewmodel-nodeps/android_common/aar/proguard.txt
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>();
+}
+
+-keep class * extends androidx.lifecycle.AndroidViewModel {
+    <init>(android.app.Application);
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.localbroadcastmanager_localbroadcastmanager-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.print_print-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.fragment_fragment-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.legacy_legacy-support-core-ui-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.customview_customview-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.viewpager_viewpager-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.coordinatorlayout_coordinatorlayout-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2016 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# CoordinatorLayout resolves the behaviors of its child components with reflection.
+-keep public class * extends androidx.coordinatorlayout.widget.CoordinatorLayout$Behavior {
+    public <init>(android.content.Context,android.util.AttributeSet);
+    public <init>();
+}
+
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.drawerlayout_drawerlayout-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.slidingpanelayout_slidingpanelayout-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.interpolator_interpolator-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.swiperefreshlayout_swiperefreshlayout-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.asynclayoutinflater_asynclayoutinflater-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.vectordrawable_vectordrawable-nodeps/android_common/aar/proguard.txt
+# including out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.vectordrawable_vectordrawable-animated-nodeps/android_common/aar/proguard.txt
+# Copyright (C) 2016 The Android Open Source Project
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# keep setters in VectorDrawables so that animations can still work.
+-keepclassmembers class androidx.vectordrawable.graphics.drawable.VectorDrawableCompat$* {
+    void set*(***);
+    *** get*();
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/AndroidManifest.xml:55
+-keep class io.rivmt.keyboard.openwnn.KOKR.ListLangKeyActionDialogActivity {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/AndroidManifest.xml:30
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/AndroidManifest.xml:16
+-keep class io.rivmt.keyboard.openwnn.OpenWnnKOKR {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/keyboard_android_default.xml:17
+-keep class android.inputmethodservice.KeyboardView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_title_material.xml:56
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_material.xml:52
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_button_bar_material.xml:43
+-keep class android.widget.Space {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_select_dialog_material.xml:23
+-keep class androidx.appcompat.app.AlertController$RecycleListView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_action_menu_item_layout.xml:17
+-keep class androidx.appcompat.view.menu.ActionMenuItemView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_expanded_menu_layout.xml:17
+-keep class androidx.appcompat.view.menu.ExpandedMenuView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_popup_menu_item_layout.xml:17
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_list_menu_item_layout.xml:17
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_cascading_menu_item_layout.xml:20
+-keep class androidx.appcompat.view.menu.ListMenuItemView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout-v26/abc_screen_toolbar.xml:27
+-keep class androidx.appcompat.widget.ActionBarContainer {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout-v26/abc_screen_toolbar.xml:44
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_action_mode_bar.xml:19
+-keep class androidx.appcompat.widget.ActionBarContextView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout-v26/abc_screen_toolbar.xml:17
+-keep class androidx.appcompat.widget.ActionBarOverlayLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_action_menu_layout.xml:17
+-keep class androidx.appcompat.widget.ActionMenuView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_activity_chooser_view.xml:19
+-keep class androidx.appcompat.widget.ActivityChooserView$InnerLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_material.xml:18
+-keep class androidx.appcompat.widget.AlertDialogLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_button_bar_material.xml:26
+-keep class androidx.appcompat.widget.ButtonBarLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_screen_content_include.xml:19
+-keep class androidx.appcompat.widget.ContentFrameLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_title_material.xml:45
+-keep class androidx.appcompat.widget.DialogTitle {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_screen_simple_overlay_action_mode.xml:23
+-keep class androidx.appcompat.widget.FitWindowsFrameLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_screen_simple.xml:17
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_dialog_title_material.xml:22
+-keep class androidx.appcompat.widget.FitWindowsLinearLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_search_view.xml:75
+-keep class androidx.appcompat.widget.SearchView$SearchAutoComplete {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout-v26/abc_screen_toolbar.xml:37
+-keep class androidx.appcompat.widget.Toolbar {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_screen_simple_overlay_action_mode.xml:32
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_screen_simple.xml:25
+-keep class androidx.appcompat.widget.ViewStubCompat {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_bottom_sheet_dialog.xml:26
+-keep class androidx.coordinatorlayout.widget.CoordinatorLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/androidx/androidx.appcompat_appcompat-nodeps/android_common/aar/res/layout/abc_alert_dialog_material.xml:41
+-keep class androidx.core.widget.NestedScrollView {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/candidates_view_white.xml:8
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/candidates_view_flat_dark.xml:8
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/candidates_view_flat_blue.xml:7
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/candidates_view_dark.xml:8
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/candidates_view.xml:8
+-keep class androidx.recyclerview.widget.RecyclerView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_bottom_navigation_item.xml:27
+-keep class com.google.android.material.internal.BaselineLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_text_input_password_icon.xml:18
+-keep class com.google.android.material.internal.CheckableImageButton {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_navigation_item.xml:17
+-keep class com.google.android.material.internal.NavigationMenuItemView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_navigation_menu.xml:17
+-keep class com.google.android.material.internal.NavigationMenuView {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_layout_snackbar.xml:18
+-keep class com.google.android.material.snackbar.Snackbar$SnackbarLayout {
+    <init>(...);
+}
+
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_layout_snackbar_include_material.xml:18
+# Referenced at out/soong/.intermediates/prebuilts/sdk/current/extras/material-design-x/com.google.android.material_material-nodeps/android_common/aar/res/layout/design_layout_snackbar_include.xml:18
+-keep class com.google.android.material.snackbar.SnackbarContentLayout {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/candidate_scale_up.xml:40
+-keep class io.rivmt.keyboard.openwnn.CandidateViewButton {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/keyboard_white.xml:2
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/keyboard_flat_dark.xml:2
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/keyboard_eink.xml:2
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/layout/keyboard_dark.xml:2
+-keep class io.rivmt.keyboard.openwnn.KOKR.DefaultSoftKeyboardViewKOKR {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_conversion.xml:22
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.EditAutotextPreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_method.xml:6
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.EnableInputMethodPreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_softkeyboard.xml:102
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_hardkeyboard.xml:36
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_appearance.xml:13
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.IntEditTextPreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_softkeyboard.xml:10
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_hardkeyboard.xml:6
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_developer.xml:13
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_appearance.xml:62
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.KeyboardListPreferenceKOKR {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_system.xml:27
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.KeystrokePreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_method.xml:9
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.PickInputMethodPreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_about.xml:6
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.RevealHiddenPreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_softkeyboard.xml:25
+-keep class io.rivmt.keyboard.openwnn.KOKR.preference.SoftLayoutPreference {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:18
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers.xml:18
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$AboutFragment {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:21
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$DeveloperFragment {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:12
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers.xml:12
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$HardKeyboardFragment {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:3
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers.xml:3
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$InputMethodFragment {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:6
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers.xml:6
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$KeyboardAppearanceFragment {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:9
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers.xml:9
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$SoftKeyboardFragment {
+    <init>(...);
+}
+
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers_dev.xml:15
+# Referenced at packages/inputmethods/OpenWnn-Korean/app/src/main/res/xml/openwnn_pref_ko_headers.xml:15
+-keep class io.rivmt.keyboard.openwnn.OpenWnnControlPanelKOKR$SystemFragment {
+    <init>(...);
+}
+
+-keep public class com.google.vending.licensing.ILicensingService
+
+-keep public class com.android.vending.licensing.ILicensingService
+
+# For native methods, see http://proguard.sourceforge.net/manual/examples.html#native
+-keepclasseswithmembers class * {
+    native <methods>;
+}
+
+# keep setters in Views so that animations can still work.
+# see http://proguard.sourceforge.net/manual/examples.html#beans
+-keepclassmembers public class * extends android.view.View {
+    void set*(***);
+    *** get*();
+}
+
+# We want to keep methods in Activity that could be used in the XML attribute onClick
+-keepclassmembers class * extends android.app.Activity {
+    public void *(android.view.View);
+}
+
+# For enumeration classes, see http://proguard.sourceforge.net/manual/examples.html#enumerations
+-keepclassmembers enum  * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keepclassmembers class * extends android.os.Parcelable {
+    public static final android.os.Parcelable$Creator CREATOR;
+}
+
+-keepclassmembers class **.R$* {
+    public static <fields>;
+}
+
+# Understand the @Keep support annotation.
+-keep class android.support.annotation.Keep {
+    <fields>;
+    <methods>;
+}
+
+-keep @android.support.annotation.Keep class * {
+    <fields>;
+    <methods>;
+}
+
+-keepclasseswithmembers class * {
+    @android.support.annotation.Keep
+    <methods>;
+}
+
+-keepclasseswithmembers class * {
+    @android.support.annotation.Keep
+    <fields>;
+}
+
+-keepclasseswithmembers class * {
+    @android.support.annotation.Keep
+    <init>(...);
+}
+
+-keep,allowshrinking class androidx.appcompat.** {
+    <fields>;
+    <methods>;
+}
+
+-keep class * extends androidx.appcompat.app.AppCompatViewInflater {
+    <fields>;
+    <methods>;
+}
+
+# for com.mstar.android.media.MMediaPlayer library
+-keepclassmembers class com.mstar.android.media.MMediaPlayer.** {
+    private long mNaticeSubtitleSurfaceTexture;
+    private SurfaceHolder mSubtitleSurfaceHolder;
+    <fields>;
+    <methods>;
+}
+
+-keepclassmembers class com.mstar.android.media.MMediaPlayer {
+    private long mNaticeSubtitleSurfaceTexture;
+    private android.view.SurfaceHolder mSubtitleSurfaceHolder;
+}
+
+-keepclassmembers class com.mstar.android.media.MMediaPlayer$** {
+    <fields>;
+    <methods>;
+}
+
+# for glide library
+-keep public class * extends com.bumptech.glide.module.GlideModule
+
+-keep class * extends com.bumptech.glide.module.AppGlideModule {
+    <init>(...);
+}
+
+-keep public enum  com.bumptech.glide.load.ImageHeaderParser$** {
+    **[] $VALUES;
+    public <fields>;
+    public <methods>;
+}
+
+-keep class com.bumptech.glide.load.data.ParcelFileDescriptorRewinder$InternalRewinder {
+    *** rewind();
+}
+
+# for this apk
+-keepclassmembers class com.toptech.infopublish.view.MarqueeText {
+    <fields>;
+    <methods>;
+}

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
 
+/*
 import io.rivmt.keyboard.openwnn.KOKR.trie.HashMapTrieDictionary;
 
 public class TrieTest {
@@ -37,3 +38,4 @@ public class TrieTest {
 	}
 
 }
+*/

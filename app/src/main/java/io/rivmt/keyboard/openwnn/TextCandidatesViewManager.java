@@ -32,6 +32,7 @@ import android.text.style.DynamicDrawableSpan;
 import android.util.Log;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +47,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import io.rivmt.keyboard.openwnn.event.CandidateViewTouchEvent;
+import io.rivmt.keyboard.openwnn.event.InputJAJPEvent;
 import io.rivmt.keyboard.openwnn.event.ListCandidatesEvent;
 import io.rivmt.keyboard.openwnn.event.SelectCandidateEvent;
 import io.rivmt.keyboard.openwnn.event.UpdateCandidateEvent;
@@ -81,6 +83,8 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
     /** Maximum number of displaying candidates par one line (full view mode) */
     private static final int FULL_VIEW_DIV = 4;
 
+    /** Focus is none now */
+    private static final int FOCUS_NONE = -1;
     /** Body view of the candidates list */
     private ViewGroup  mViewBody;
     /** Scroller of {@code mViewBodyText} */
@@ -170,8 +174,22 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
     private boolean mCreateCandidateDone;
     /** Number of lines in normal view */
     private int mNormalViewWordCountOfLine;
+    /** List of textView for CandiData List 1st for Symbol mode */
+    private ArrayList<TextView> mTextViewArray1st = new ArrayList<TextView>();
+    /** List of textView for CandiData List 2st for Symbol mode */
+    private ArrayList<TextView> mTextViewArray2nd = new ArrayList<TextView>();
+    /** Now focus textView index */
+    private int mCurrentFocusIndex = FOCUS_NONE;
+    /** Focused View */
+    private View mFocusedView = null;
+    /** Focused View Background */
+    private Drawable mFocusedViewBackground = null;
+    /** Now focused TextView in mTextViewArray1st */
+    private boolean mHasFocusedArray1st = true;
     /** general infomation about a display */
     private final DisplayMetrics mMetrics = new DisplayMetrics();
+    /** TextView index */
+    private int mdirection = 0;
 
     /** Event listener for touching a candidate */
     private OnTouchListener mCandidateOnTouch = new OnTouchListener() {
@@ -480,9 +498,9 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
         clearCandidates();
         mConverter = converter;
         setViewLayout(CandidatesViewManager.VIEW_TYPE_NORMAL);
-        
+        mCurrentFocusIndex = 0;
         mViewCandidateTemplate.setVisibility(View.VISIBLE);
-        mViewCandidateTemplate.setBackgroundResource(R.drawable.cand_back);
+        mViewCandidateTemplate.setBackgroundResource(R.drawable.color_selector);
 
         displayCandidates(converter, true, getMaxLine());
     }
@@ -648,8 +666,6 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
         textView.setId(mWordCount);
         textView.setVisibility(View.VISIBLE);
         textView.setPressed(false);
-        textView.setFocusable(true);
-        textView.setFocusableInTouchMode(true);
 
         if (isCategory) {
             textView.setOnClickListener(null);
@@ -658,7 +674,7 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
         } else {
             textView.setOnClickListener(mCandidateOnClick);
             textView.setOnLongClickListener(mCandidateOnLongClick);
-            textView.setBackgroundResource(R.drawable.cand_back);
+            textView.setBackgroundResource(R.drawable.color_selector);
         }
         textView.setOnTouchListener(mCandidateOnTouch);
 
@@ -685,6 +701,8 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
 
         mWnnWordArray.add(mWordCount, word);
         mWordCount++;
+        mTextViewArray1st.add(textView);
+        mTextViewArray2nd.add(textView);
     }
 
     /**
@@ -718,7 +736,9 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
     private TextView createCandidateView() {
         TextView text = new TextView(mViewBodyScroll.getContext());
         text.setTextSize(20);
-        text.setBackgroundResource(R.drawable.cand_back);
+        text.setFocusable(true);
+        text.setFocusableInTouchMode(true);
+        text.setBackgroundResource(R.drawable.color_selector);
         text.setGravity(Gravity.CENTER);
         text.setSingleLine();
         text.setPadding(4, 4, 4, 4);
@@ -773,6 +793,7 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
         
     /** @see CandidatesViewManager#clearCandidates */
     public void clearCandidates() {
+        clearFocusCandidate();
         clearNormalViewCandidate();
 
         ViewGroup layout = mViewCandidateList2nd;
@@ -781,15 +802,17 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
             View v = layout.getChildAt(i);
             v.setVisibility(View.GONE);
         }
-    
+
         mLineCount = 1;
         mWordCount = 0;
         mWnnWordArray.clear();
-
+        mTextViewArray1st.clear();
+        mTextViewArray2nd.clear();
         mLineLength = 0;
 
         mIsFullView = false;
         setViewLayout(CandidatesViewManager.VIEW_TYPE_NORMAL);
+        mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.LIST_CANDIDATES_NORMAL));
         if (mAutoHideMode) {
             setViewLayout(CandidatesViewManager.VIEW_TYPE_CLOSE);
         }
@@ -818,7 +841,15 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
             Log.d("iwnn", "NO VIBRATOR");
         }
     }
-    
+
+    /**
+     * Set full mode.
+     */
+    public void setFullMode() {
+        mIsFullView = true;
+        mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.LIST_CANDIDATES_FULL));
+    }
+
     /**
      * Process {@code OpenWnnEvent.CANDIDATE_VIEW_TOUCH} event.
      * 
@@ -1000,5 +1031,108 @@ public class TextCandidatesViewManager implements CandidatesViewManager, Gesture
      */
     private int getCandidateMinimumHeight() {
         return mCandidateMinimumHeight;
+    }
+    /**
+     * Get a flag candidate is focused now.
+     *
+     * @return the Candidate is focused of a flag.
+     */
+    public boolean isFocusCandidate(){
+        if (mCurrentFocusIndex != FOCUS_NONE) {
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Clear focus to selected candidate.
+     */
+    public void clearFocusCandidate(){
+        View view = mFocusedView;
+        if (view != null) {
+            view.setBackgroundDrawable(mFocusedViewBackground);
+            view.setPadding(0, 0, 0, 0);
+            mFocusedView = null;
+        }
+
+        mdirection = 0;
+        mHasFocusedArray1st = true;
+        mCurrentFocusIndex = FOCUS_NONE;
+        mWnn.onEvent(new InputJAJPEvent(InputJAJPEvent.FOCUS_CANDIDATE_END));
+    }
+
+    /**
+     * Get WnnWord.
+     *
+     * @return WnnWord word
+     */
+    public WnnWord getWnnWord(int index) {
+        WnnWord word = null;
+        if (mHasFocusedArray1st) {
+            word = mWnnWordArray.get(index);
+        } else {
+            word = mWnnWordArray.get(index);
+        }
+        return word;
+    }
+
+    /**
+     * TextView event
+     *
+     * @return KeyEvent event
+     */
+    public boolean performFocusNavigation(KeyEvent event) {
+        int size1st = mTextViewArray1st.size();
+        if (mHasFocusedArray1st && (size1st == 0)) {
+            mHasFocusedArray1st = false;
+        }
+        ArrayList<TextView> list = mHasFocusedArray1st ? mTextViewArray1st : mTextViewArray2nd;
+        int size = list.size();
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                if (event.hasNoModifiers()) {
+                    if (mdirection != 0){
+                        mdirection = mdirection - 1;
+                    }
+
+                }
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                if (event.hasNoModifiers()) {
+                    if((mdirection + 1) < size)
+                    mdirection = mdirection + 1;
+                }
+                break;
+            case KeyEvent.KEYCODE_DPAD_UP:
+                if (event.hasNoModifiers()){
+                    if (mdirection != 0)
+                        mdirection = mdirection - 4;
+                }
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                if (event.hasNoModifiers()){
+                    if((mdirection + 4) < size)
+                        mdirection = mdirection + 4;
+                }
+                break;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+                selectCandidate(getWnnWord(mdirection));
+                mdirection = 0;
+                break;
+        }
+        if(mdirection > (size - 2)){
+            setFullMode();
+        }
+        TextView view = list.get(mdirection);
+        View focused = view.findFocus();
+        if (focused != null) {
+            focused.focusSearch(mdirection);
+        } else {
+            if (view.restoreDefaultFocus()) {
+                return true;
+            }
+        }
+
+
+        return false;
     }
 }

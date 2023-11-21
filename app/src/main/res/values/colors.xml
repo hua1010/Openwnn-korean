@@ -34,7 +34,7 @@
     <color name="keybg_white_mod">#C5CCD6</color>
     <color name="keybg_white_mod_p">#85868A</color>
     <color name="keybg_white_outline">#85868A</color>
-    <color name="keybg_white_enter">#007AFF</color>
+    <color name="keybg_white_enter">#ffffff</color>
     <color name="keybg_white_enter_p">#0D47A1</color>
     <color name="keybg_white_focus_p">#E91E63</color>
 

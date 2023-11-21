@@ -74,7 +74,7 @@
          android:keyWidth="12.5%p"/>
     <Key android:codes="65377" android:keyLabel="@string/key_qwerty_half_period"
          android:keyWidth="12.5%p"/>
-    <Key android:codes="-101" android:keyIcon="@drawable/key_qwerty_enter" android:iconPreview="@drawable/key_qwerty_enter_b" 
+    <Key android:codes="-216" android:keyIcon="@drawable/key_qwerty_enter" android:iconPreview="@drawable/key_qwerty_enter_b"
          android:keyWidth="15%p" android:keyEdgeFlags="right"/>
   </Row>
 </Keyboard>

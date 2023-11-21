@@ -331,7 +331,7 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
     /** Default constructor */
     public DefaultSoftKeyboardJAJP() {
         mCurrentLanguage     = LANG_JA;
-        mCurrentKeyboardType = KEYBOARD_12KEY;
+        mCurrentKeyboardType = KEYBOARD_QWERTY;
         mShiftOn             = KEYBOARD_SHIFT_OFF;
         mCurrentKeyMode      = KEYMODE_JA_FULL_HIRAGANA;
     }
@@ -1538,6 +1538,16 @@ public class DefaultSoftKeyboardJAJP extends DefaultSoftKeyboard {
             		OpenWnnJAJP.ENGINE_MODE_OPT_TYPE_QWERTY));
         }
         super.setHardKeyboardHidden(hidden);
+    }
+
+    public boolean getDisableUP(){
+        if(mKeyboardView != null) {
+            if(mKeyboardView instanceof  DefaultSoftKeyboardViewJAJP) {
+                DefaultSoftKeyboardViewJAJP keyboardView = ((DefaultSoftKeyboardViewJAJP) mKeyboardView);
+                return keyboardView.upDisable();
+            }
+        }
+        return false;
     }
 }
 

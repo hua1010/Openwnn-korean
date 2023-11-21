@@ -22,7 +22,7 @@
 			  <subtype 
 			  	android:label="@string/ime_name_jap"
 			  	android:icon="@mipmap/ic_launcher" 
-			  	android:imeSubtypeLocale="en_US" 
+			  	android:imeSubtypeLocale="ja" 
 			  	android:imeSubtypeMode="keyboard"
 			  	android:imeSubtypeExtraValue="AsciiCapable,EmojiCapable"/>
 </input-method>

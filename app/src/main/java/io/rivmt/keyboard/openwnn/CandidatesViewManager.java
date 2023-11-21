@@ -16,6 +16,7 @@
 
 package io.rivmt.keyboard.openwnn;
 
+import android.view.KeyEvent;
 import android.view.View;
 import android.content.SharedPreferences;
 
@@ -105,4 +106,14 @@ public interface CandidatesViewManager {
      * @param pref    The preferences
      */
     public void setPreferences(SharedPreferences pref);
+
+    /**
+     * TextView Is it empty
+     */
+    public boolean isFocusCandidate();
+
+    /**
+     * TextView event
+     */
+    public boolean performFocusNavigation(KeyEvent event);
 }

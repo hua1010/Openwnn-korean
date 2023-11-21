@@ -201,6 +201,26 @@ public class InputJAJPEvent extends OpenWnnEvent {
      */
     public static final int KEYUP = 0xF000001F;
 
+    /**
+     * Start focus candidate.
+     */
+    public static final int FOCUS_CANDIDATE_START = 0xF0002000;
+
+    /**
+     * Scroll up for symbol keyboard.
+     */
+    public static final int CANDIDATE_VIEW_SCROLL_UP = 0xF0001000;
+
+    /**
+     * Scroll down for symbol keyboard.
+     */
+    public static final int CANDIDATE_VIEW_SCROLL_DOWN = 0xF0001001;
+
+    /**
+     * End focus candidate.
+     */
+    public static final int FOCUS_CANDIDATE_END = 0xF0002001;
+
     /** Event code */
     public int code = UNDEFINED;
     /** Detail mode of the event */

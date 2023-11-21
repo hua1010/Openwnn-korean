@@ -814,8 +814,10 @@ public class OpenWnnJAJP extends OpenWnn {
             case KeyEvent.KEYCODE_DPAD_LEFT:
             case KeyEvent.KEYCODE_DPAD_RIGHT:
             case KeyEvent.KEYCODE_DPAD_CENTER:
-                if(mInputViewManager instanceof DefaultSoftKeyboardJAJP) {
-                    ((DefaultSoftKeyboardJAJP) mInputViewManager).dispatchKeyEvent(event.getKeyEvent());
+                if (!((DefaultSoftKeyboardJAJP) mInputViewManager).getDisableUP()) {
+                    if (mInputViewManager instanceof DefaultSoftKeyboardJAJP) {
+                        ((DefaultSoftKeyboardJAJP) mInputViewManager).dispatchKeyEvent(event.getKeyEvent());
+                    }
                 }
         }
     }
@@ -972,14 +974,35 @@ public class OpenWnnJAJP extends OpenWnn {
                 case KeyEvent.KEYCODE_DPAD_LEFT:
                 case KeyEvent.KEYCODE_DPAD_RIGHT:
                 case KeyEvent.KEYCODE_DPAD_CENTER:
-                    if(mInputViewManager instanceof DefaultSoftKeyboardJAJP) {
+                    if(mCandidatesViewManager.isFocusCandidate()) {
                         Log.d(TAG, "processKeyEvent: "+ev.getKeyCode());
+                        if (((DefaultSoftKeyboardJAJP) mInputViewManager).getDisableUP()){
+                            mCandidatesViewManager.performFocusNavigation(ev);
+                        } else {
+                            ((DefaultSoftKeyboardJAJP) mInputViewManager).dispatchKeyEvent(ev);
+                        }
+                    } else if (mInputViewManager instanceof DefaultSoftKeyboardJAJP) {
                         ((DefaultSoftKeyboardJAJP) mInputViewManager).dispatchKeyEvent(ev);
                     }
                     return true;
             }
         }
+        if(key == KeyEvent.KEYCODE_ENTER) {
+            mHardShift = 0;
+            mHardAlt = 0;
+            updateMetaKeyStateDisplay();
+            EditorInfo editorInfo = getCurrentInputEditorInfo();
+            switch(editorInfo.imeOptions & EditorInfo.IME_MASK_ACTION) {
+                case EditorInfo.IME_ACTION_SEARCH:
+                case EditorInfo.IME_ACTION_GO:
+                case EditorInfo.IME_ACTION_NEXT:
+                    sendDefaultEditorAction(true);
+                    return true;
 
+                default:
+                    return false;
+            }
+        }
         /* Functional key */
         if (mComposingText.size(ComposingText.LAYER1) > 0) {
             switch (key) {

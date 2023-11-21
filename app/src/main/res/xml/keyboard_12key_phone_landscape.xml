@@ -40,21 +40,21 @@
     >
   
     <Row>
-        <Key android:codes="-310" android:keyLabel=""
-             android:keyEdgeFlags="left"/>
+        <Key android:codes="-218" android:keyLabel="@string/key_left_arrow" android:isRepeatable="true" android:keyEdgeFlags="left"/>
         <Key android:codes="49" android:keyLabel="1"/>
         <Key android:codes="50" android:keyLabel="2"/>
         <Key android:codes="51" android:keyLabel="3"/>
-        <Key android:codes="-214" android:keyIcon="@drawable/key_12key_del_a_landscape" android:iconPreview="@drawable/key_12key_del_b_landscape"
-             android:isRepeatable="true" android:keyEdgeFlags="right"/>
+        <Key android:codes="-217" android:keyLabel="@string/key_right_arrow" android:isRepeatable="true" android:keyEdgeFlags="right"/>
     </Row>
     
     <Row>
-        <Key android:codes="-218" android:keyLabel="@string/key_left_arrow" android:isRepeatable="true" android:keyEdgeFlags="left"/>
+        <Key android:codes="-310" android:keyLabel=""
+            android:keyEdgeFlags="left"/>
         <Key android:codes="52" android:keyLabel="4"/>
         <Key android:codes="53" android:keyLabel="5"/>
         <Key android:codes="54" android:keyLabel="6"/>
-        <Key android:codes="-217" android:keyLabel="@string/key_right_arrow" android:isRepeatable="true" android:keyEdgeFlags="right"/>
+        <Key android:codes="-214" android:keyIcon="@drawable/key_12key_del_a_landscape" android:iconPreview="@drawable/key_12key_del_b_landscape"
+            android:isRepeatable="true" android:keyEdgeFlags="right"/>
     </Row>
     
     <Row>
